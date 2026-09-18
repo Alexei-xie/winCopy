@@ -27,7 +27,7 @@ namespace WinCopy {
     public partial class MainWindow : Form {
         readonly Color Ink = Design.Ink, Muted = Design.Muted, Accent = Design.Accent;
         Database db;
-        readonly Store store = new Store(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "winCopy"));
+        Store store = new Store(StorageLocation.DefaultDirectory);
         readonly TextBox search = new TextBox();
         readonly ListBox list = new ListBox();
         readonly Label status = new Label(), detailTitle = new Label(), detailMeta = new Label();
@@ -44,7 +44,7 @@ namespace WinCopy {
         IntPtr target;
         public MainWindow(bool background) {
             startupHidden = background;
-            try { db = store.Load(); } catch (Exception ex) {
+            try { store = new StorageLocation(StorageLocation.DefaultDirectory).Resolve(); db = store.Load(); } catch (Exception ex) {
                 db = new Database(); storageBlocked = true;
                 MessageBox.Show("无法读取本地数据，原文件已保留。本次运行不会覆盖它。\n" + ex.Message, "winCopy", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
@@ -171,7 +171,14 @@ namespace WinCopy {
             else if (e.KeyCode == Keys.Delete && list.Focused) { DeleteSelected(); e.SuppressKeyPress = true; }
         }
         void DeleteSelected() { var c = Selected; if (c == null) return; if ((c.Pinned || c.Snippet) && MessageBox.Show("删除此收藏或片段？", "winCopy", MessageBoxButtons.YesNo) != DialogResult.Yes) return; db.Items.Remove(c); Changed(); }
-        void ClearHistory() { if (MessageBox.Show("清空所有未收藏的历史？收藏和片段会保留。", "winCopy", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes) { db.Items.RemoveAll(x => !x.Snippet && !x.Pinned); Changed(); } }
+        void ClearHistory() {
+            int count=db.Items.Count(x=>!x.Snippet&&!x.Pinned);
+            if(count==0){SetStatus("没有可清空的普通历史");return;}
+            if(MessageBox.Show(this,"清空全部 "+count+" 条普通历史？\n收藏、常用片段和系统剪贴板不受影响。此操作不可撤销。","清空历史",MessageBoxButtons.YesNo,MessageBoxIcon.Question,MessageBoxDefaultButton.Button2)!=DialogResult.Yes)return;
+            var previous=db.Items.ToList();db.ClearHistory();
+            try{if(storageBlocked)throw new IOException("当前数据存储不可用。");store.Save(db);save.Stop();RefreshItems();SetStatus("已清空 "+count+" 条普通历史，收藏和片段已保留");}
+            catch(Exception ex){db.Items=previous;RefreshItems();MessageBox.Show(this,"清空未完成，历史已保留。\n"+ex.Message,"winCopy",MessageBoxButtons.OK,MessageBoxIcon.Warning);}
+        }
         void EditSnippet(Clip original) {
             if (original != null && original.Kind != "文本") { SetStatus("只有文本可以保存为片段"); return; }
             using (var editor = new SnippetEditor(original)) if (editor.ShowDialog(this) == DialogResult.OK) {
@@ -181,9 +188,19 @@ namespace WinCopy {
         }
         void Settings() {
             using (var f = new SettingsDialog(db)) {
-                f.UpdateAction = delegate { ShowUpdate(f); }; f.ExportAction = ExportSnippets; f.ImportAction = ImportSnippets;
+                f.StorageDirectory = store.DirectoryPath; f.UpdateAction = delegate { ShowUpdate(f); }; f.ExportAction = ExportSnippets; f.ImportAction = ImportSnippets;
                 if (f.ShowDialog(this) != DialogResult.OK) return;
                 if (f.Shortcut != db.Hotkey) { Native.UnregisterHotKey(Handle, 1); if (!RegisterShortcut(f.Shortcut)) { RegisterShortcut(db.Hotkey); MessageBox.Show("快捷键被占用，设置未保存。", "winCopy"); return; } }
+                try {
+                    if(!StorageLocation.Same(f.StorageDirectory,store.DirectoryPath)) {
+                        if(storageBlocked)throw new IOException("当前数据读取失败，不能迁移。请先恢复原数据目录再重试。");
+                        save.Stop(); db.Prune();
+                        store=new StorageLocation(StorageLocation.DefaultDirectory).Migrate(store,f.StorageDirectory,db);
+                    }
+                } catch(Exception ex) {
+                    if(f.Shortcut!=db.Hotkey){Native.UnregisterHotKey(Handle,1);RegisterShortcut(db.Hotkey);}
+                    MessageBox.Show(this,"存储位置未更改，设置未保存。\n"+ex.Message,"winCopy",MessageBoxButtons.OK,MessageBoxIcon.Warning);return;
+                }
                 db.Hotkey = f.Shortcut; db.Limit = f.HistoryLimit; db.RetentionDays = f.Days; db.AutoPaste = f.AutoPaste; db.CaptureImages = f.Images; db.RememberHistory = f.Remember; db.ExcludedApps = f.Excluded;
                 try { using (var key = Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run", true)) { if (f.Startup) key.SetValue("winCopy", "\"" + Application.ExecutablePath + "\" --background"); else key.DeleteValue("winCopy", false); } } catch (Exception ex) { MessageBox.Show("无法修改开机启动：" + ex.Message, "winCopy"); }
                 tray.Text = "winCopy · Ctrl + Alt + " + db.Hotkey; Changed(); SaveNow();

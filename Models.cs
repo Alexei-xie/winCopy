@@ -46,6 +46,7 @@ namespace WinCopy {
             if (old != null) { clip.Pinned = old.Pinned; Items.Remove(old); }
             Items.Insert(0, clip); Prune();
         }
+        public int ClearHistory() { return Items.RemoveAll(x => !x.Snippet && !x.Pinned); }
         public void Prune() {
             Items.RemoveAll(x => !x.Snippet && !x.Pinned && x.Created < DateTime.Now.AddDays(-Math.Max(1, RetentionDays)));
             var excess = Items.Where(x => !x.Snippet && !x.Pinned).Skip(Math.Max(20, Math.Min(2000, Limit))).ToList();

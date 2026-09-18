@@ -24,6 +24,14 @@ try {
         $settings.DrawToBitmap($bitmap, (New-Object System.Drawing.Rectangle(0, 0, $settings.Width, $settings.Height)))
         $bitmap.Save((Join-Path (Join-Path $PSScriptRoot $OutputDirectory) 'settings-preview.png'))
         $bitmap.Dispose()
+        $pathField = $settings.GetType().GetField('storagePath', [Reflection.BindingFlags]'Instance,NonPublic').GetValue($settings)
+        $scroll = $settings.Controls[0].Controls[0]
+        $scroll.ScrollControlIntoView($pathField.Parent)
+        [System.Windows.Forms.Application]::DoEvents()
+        $bitmap = New-Object System.Drawing.Bitmap($settings.Width, $settings.Height)
+        $settings.DrawToBitmap($bitmap, (New-Object System.Drawing.Rectangle(0, 0, $settings.Width, $settings.Height)))
+        $bitmap.Save((Join-Path (Join-Path $PSScriptRoot $OutputDirectory) 'storage-settings-preview.png'))
+        $bitmap.Dispose()
     } finally { $settings.Dispose() }
     Write-Output 'PASS: main window and settings construction / render.'
 } finally {

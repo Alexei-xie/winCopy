@@ -13,6 +13,10 @@ if (-not (Test-Path $compiler)) { $compiler = Join-Path $env:WINDIR 'Microsoft.N
 if ($LASTEXITCODE -ne 0) { throw 'Update test compilation failed.' }
 & (Join-Path $dist 'UpdateRegression.exe')
 if ($LASTEXITCODE -ne 0) { throw 'Update regression tests failed.' }
+& $compiler /nologo /target:exe /codepage:65001 "/out:$dist\StorageRegression.exe" "/reference:$dist\winCopy.exe" /reference:System.Core.dll (Join-Path $PSScriptRoot 'tests\StorageRegression.cs')
+if ($LASTEXITCODE -ne 0) { throw 'Storage test compilation failed.' }
+& (Join-Path $dist 'StorageRegression.exe')
+if ($LASTEXITCODE -ne 0) { throw 'Storage regression tests failed.' }
 if (-not $IsccPath) {
     $IsccPath = @("${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe", "$env:ProgramFiles\Inno Setup 6\ISCC.exe") | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -18,7 +18,7 @@ namespace WinCopy {
             groupStrip.Reordered += delegate(string[] names) { db.GroupOrder = names.Where(x => x != "所有分组").ToList(); save.Stop(); save.Start(); };
             sectionSwitch = CompactButton("常用片段", delegate { view = view == "常用片段" ? "全部历史" : "常用片段"; RefreshItems(); }, 82);
             row.Controls.Add(groupStrip,0,0); row.Controls.Add(sectionSwitch,1,0); layout.Controls.Add(row,0,2);
-            sectionLabel.Dock = DockStyle.Fill; sectionLabel.ForeColor = Muted; sectionLabel.TextAlign = ContentAlignment.MiddleLeft; layout.Controls.Add(sectionLabel,0,3);
+            sectionLabel.AutoEllipsis = true; sectionLabel.Dock = DockStyle.Fill; sectionLabel.ForeColor = Muted; sectionLabel.TextAlign = ContentAlignment.MiddleLeft; var section=new TableLayoutPanel {Dock=DockStyle.Fill,ColumnCount=2,Margin=Padding.Empty}; section.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100)); section.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,88)); section.Controls.Add(sectionLabel,0,0); var clear=CompactButton("清空历史",ClearHistory,84); clear.Height=28; clear.ForeColor=Design.Muted; tips.SetToolTip(clear,"清空全部普通历史，保留收藏和片段"); section.Controls.Add(clear,1,0); layout.Controls.Add(section,0,3);
             groups.DropDownStyle = ComboBoxStyle.DropDownList; // Retains filtering state, never displayed.
         }
         void SyncGroupStrip() {
