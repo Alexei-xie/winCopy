@@ -21,6 +21,10 @@ if ($LASTEXITCODE -ne 0) { throw 'Storage regression tests failed.' }
 if ($LASTEXITCODE -ne 0) { throw 'Group test compilation failed.' }
 & (Join-Path $dist 'GroupRegression.exe')
 if ($LASTEXITCODE -ne 0) { throw 'Group regression tests failed.' }
+& $compiler /nologo /target:exe /codepage:65001 "/out:$dist\NumberRegression.exe" "/reference:$dist\winCopy.exe" /reference:System.Core.dll /reference:System.Drawing.dll /reference:System.Windows.Forms.dll (Join-Path $PSScriptRoot 'tests\NumberRegression.cs')
+if ($LASTEXITCODE -ne 0) { throw 'Numeric test compilation failed.' }
+& (Join-Path $dist 'NumberRegression.exe')
+if ($LASTEXITCODE -ne 0) { throw 'Numeric regression tests failed.' }
 if (-not $IsccPath) {
     $IsccPath = @("${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe", "$env:ProgramFiles\Inno Setup 6\ISCC.exe") | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
 }
