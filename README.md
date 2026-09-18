@@ -1,9 +1,13 @@
-# winCopy
+﻿# winCopy
 
 [![Build Windows installer](https://github.com/Alexei-xie/winCopy/actions/workflows/build.yml/badge.svg)](https://github.com/Alexei-xie/winCopy/actions/workflows/build.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 适用于 Windows 10 / 11 的轻量原生剪贴板管理器。以 [Clipy](https://github.com/Clipy/Clipy) 的历史、片段与快捷键工作流为参考，独立 C# / Windows Forms 实现，不包含 Clipy 的 Swift 代码或图标。
+
+![winCopy 圆角界面](docs/preview.png)
+
+界面采用统一圆角组件、卡片历史列表与主次操作层级，详见 [设计说明](docs/DESIGN.md)。
 
 ## 下载与安装
 

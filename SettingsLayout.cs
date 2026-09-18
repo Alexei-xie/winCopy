@@ -18,7 +18,7 @@ namespace WinCopy {
             foreach(var c in new[] {paste,images,remember,startup}) { c.AutoSize=true; c.Margin=new Padding(0,7,0,7); flow.Controls.Add(c); }
             paste.Checked=db.AutoPaste; images.Checked=db.CaptureImages; remember.Checked=db.RememberHistory;
             using(var run=Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run")) startup.Checked=run!=null&&run.GetValue("winCopy")!=null;
-            flow.Controls.Add(new Label {Text="不记录以下应用（进程名，用英文逗号分隔）",AutoSize=true,Margin=new Padding(0,14,0,6)}); excluded.Text=db.ExcludedApps; flow.Controls.Add(excluded);
+            flow.Controls.Add(new Label {Text="不记录以下应用（进程名，用英文逗号分隔）",AutoSize=true,Margin=new Padding(0,14,0,6)}); excluded.Text=db.ExcludedApps; var exclusionFrame=Design.Input(excluded); exclusionFrame.Tag="input"; exclusionFrame.Dock=DockStyle.None; flow.Controls.Add(exclusionFrame);
             flow.Controls.Add(new Label {Text="数据保存在 %LOCALAPPDATA%\\winCopy\n使用当前 Windows 账户加密，无网络通信。\n应用排除按复制时前台窗口识别；无法识别所有密码内容。",AutoSize=true,ForeColor=Color.DimGray,Margin=new Padding(0,12,0,14)});
             // Actions are outside the scrollable content and use preferred heights, including DPI scaling.
             var footer=new TableLayoutPanel {Dock=DockStyle.Fill,AutoSize=true,ColumnCount=1,RowCount=2,Margin=Padding.Empty,Padding=new Padding(0,12,0,0)};
@@ -33,11 +33,11 @@ namespace WinCopy {
                 flow.MaximumSize=new Size(width,0);
                 foreach(Control c in flow.Controls) {
                     c.MaximumSize=new Size(Math.Max(1,width-16),0);
-                    if(c is Panel) {c.MinimumSize=new Size(0, Math.Max(39, Font.Height+18)); c.Height=c.MinimumSize.Height; c.Width=width-16; foreach(Control child in c.Controls) if(!(child is Label)) child.Left=Math.Max(200,c.Width-child.Width-4);}
+                    if(c is Panel) {c.MinimumSize=new Size(0, Math.Max(44, Font.Height+22)); c.Height=c.MinimumSize.Height; c.Width=width-16; foreach(Control child in c.Controls) if(!(child is Label) && (string)c.Tag != "input") child.Left=Math.Max(200,c.Width-child.Width-4);}
                     if(c==excluded) c.Width=width-16;
                 }
-            }; scroll.SizeChanged+=delegate{resize();}; Shown+=delegate{resize();};
+            }; scroll.SizeChanged+=delegate{resize();}; Shown+=delegate{resize();}; Design.Dialog(this);
         }
-        Button ActionButton(string text) {return new Button {Text=text,AutoSize=true,AutoSizeMode=AutoSizeMode.GrowAndShrink,MinimumSize=new Size(108,36),Padding=new Padding(12,5,12,5),Margin=new Padding(4,4,4,6)};}
+        Button ActionButton(string text) {return new RoundedButton {Text=text,AutoSize=true,AutoSizeMode=AutoSizeMode.GrowAndShrink,MinimumSize=new Size(108,36),Padding=new Padding(12,5,12,5),Margin=new Padding(4,4,4,6)};}
     }
 }

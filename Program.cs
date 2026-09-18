@@ -25,7 +25,7 @@ namespace WinCopy {
         }
     }
     public partial class MainWindow : Form {
-        readonly Color Ink = Color.FromArgb(31, 40, 59), Muted = Color.FromArgb(112, 123, 145), Accent = Color.FromArgb(77, 96, 232);
+        readonly Color Ink = Design.Ink, Muted = Design.Muted, Accent = Design.Accent;
         Database db;
         readonly Store store = new Store(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "winCopy"));
         readonly TextBox search = new TextBox();
@@ -73,7 +73,7 @@ namespace WinCopy {
         [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)] static extern IntPtr SendMessage(IntPtr handle, int message, IntPtr wparam, string text);
         [System.Runtime.InteropServices.DllImport("user32.dll")] static extern bool DestroyIcon(IntPtr icon);
         Button Button(string text, Action action, bool primary = false) {
-            var b = new Button { Text = text, AutoSize = true, Height = 36, MinimumSize = new Size(80, 36), FlatStyle = FlatStyle.Flat, BackColor = primary ? Accent : Color.White, ForeColor = primary ? Color.White : Ink, Cursor = Cursors.Hand, Margin = new Padding(0, 0, 8, 8), Padding = new Padding(8, 0, 8, 0) };
+            var b = new RoundedButton { Text = text, AutoSize = true, Height = 36, MinimumSize = new Size(80, 36), FlatStyle = FlatStyle.Flat, BackColor = primary ? Accent : Color.White, ForeColor = primary ? Color.White : Ink, Cursor = Cursors.Hand, Margin = new Padding(0, 0, 8, 8), Padding = new Padding(8, 0, 8, 0) };
             b.FlatAppearance.BorderColor = Color.FromArgb(224, 229, 239); b.Click += delegate { action(); }; return b;
         }
         Clip Selected { get { return list.SelectedItem as Clip; } }
@@ -103,7 +103,7 @@ namespace WinCopy {
             preview.Text = c == null ? "搜索历史、收藏常用内容，或创建你的第一个片段。\r\n\r\nCtrl + Alt + " + db.Hotkey + " 随时呼出。" : c.Text;
             if (picture.Visible) { try { using (var ms = new MemoryStream(c.Image)) using (var image = Image.FromStream(ms)) picture.Image = new Bitmap(image); } catch { picture.Visible = false; preview.Visible = true; preview.Text = "图片数据无法预览"; } }
         }
-        void SetStatus(string message) { status.Text = message; }
+        void SetStatus(string message) { status.Text = message; activityLabel.Text = paused ? "记录已暂停 · 在更多菜单中继续" : "留住灵感，让复制更轻松"; }
         void Changed() { db.Prune(); RefreshItems(); save.Stop(); save.Start(); }
         void SaveNow() { if (storageBlocked) return; try { store.Save(db); } catch (Exception ex) { SetStatus("保存失败：" + ex.Message); } }
         protected override void OnHandleCreated(EventArgs e) {

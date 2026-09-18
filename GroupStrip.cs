@@ -30,12 +30,12 @@ namespace WinCopy {
             base.OnPaint(e); var state = e.Graphics.Save(); e.Graphics.SetClip(new Rectangle(0, 0, ViewWidth, Height)); int left = -offset;
             for (int i = 0; i < items.Count; i++) {
                 int width = ItemWidth(items[i]); var rect = new Rectangle(left, 1, width, Math.Max(1, Height-3)); bool selected = items[i] == active;
-                using (var brush = new SolidBrush(selected ? Color.FromArgb(77,96,232) : BackColor)) e.Graphics.FillRectangle(brush, rect);
-                TextRenderer.DrawText(e.Graphics, items[i], Font, rect, selected ? Color.White : ForeColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix | TextFormatFlags.PreserveGraphicsClipping);
-                if (dragging && insertion == i) using (var pen = new Pen(Color.FromArgb(77,96,232), 2)) e.Graphics.DrawLine(pen, left, 3, left, Height-3);
+                Design.Surface(e.Graphics, new Rectangle(rect.X+1,rect.Y+1,rect.Width-2,rect.Height-2), selected ? Color.FromArgb(232,230,252) : BackColor, 10, Color.Empty);
+                TextRenderer.DrawText(e.Graphics, items[i], Font, rect, selected ? Design.Accent : ForeColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix | TextFormatFlags.PreserveGraphicsClipping);
+                if (dragging && insertion == i) using (var pen = new Pen(Design.Accent, 2)) e.Graphics.DrawLine(pen, left, 3, left, Height-3);
                 left += width + 4;
             }
-            if (dragging && insertion == items.Count) using (var pen = new Pen(Color.FromArgb(77,96,232), 2)) e.Graphics.DrawLine(pen, left-2, 3, left-2, Height-3);
+            if (dragging && insertion == items.Count) using (var pen = new Pen(Design.Accent, 2)) e.Graphics.DrawLine(pen, left-2, 3, left-2, Height-3);
             e.Graphics.Restore(state);
             if (TotalWidth > Width) { using(var cover = new SolidBrush(BackColor)) e.Graphics.FillRectangle(cover, new Rectangle(Width-42,0,42,Height)); TextRenderer.DrawText(e.Graphics, "‹", Font, new Rectangle(Width-40,0,20,Height), ForeColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter); TextRenderer.DrawText(e.Graphics, "›", Font, new Rectangle(Width-20,0,20,Height), ForeColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter); }
         }
