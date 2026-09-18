@@ -12,9 +12,9 @@
     <Optimize>true</Optimize>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System"/><Reference Include="System.Core"/><Reference Include="System.Drawing"/>
+    <Reference Include="System"/><Reference Include="System.Web.Extensions"/><Reference Include="System.Core"/><Reference Include="System.Drawing"/>
     <Reference Include="System.Windows.Forms"/><Reference Include="System.Security"/><Reference Include="System.Xml"/><Reference Include="System.Xml.Linq"/>
-    <Compile Include="Program.cs"/><Compile Include="Design.cs"/><Compile Include="ToggleSwitch.cs"/><Compile Include="DesignPopup.cs"/><Compile Include="AssemblyInfo.cs"/><Compile Include="Popup.cs"/><Compile Include="PopupInteraction.cs"/><Compile Include="GroupStrip.cs"/><Compile Include="SettingsLayout.cs"/><Compile Include="Models.cs"/><Compile Include="Native.cs"/><Compile Include="Dialogs.cs"/><Compile Include="SelfTest.cs"/>
+    <Compile Include="Program.cs"/><Compile Include="Updates.cs"/><Compile Include="Design.cs"/><Compile Include="ToggleSwitch.cs"/><Compile Include="DesignPopup.cs"/><Compile Include="AssemblyInfo.cs"/><Compile Include="Popup.cs"/><Compile Include="PopupInteraction.cs"/><Compile Include="GroupStrip.cs"/><Compile Include="SettingsLayout.cs"/><Compile Include="Models.cs"/><Compile Include="Native.cs"/><Compile Include="Dialogs.cs"/><Compile Include="SelfTest.cs"/>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
 </Project>

@@ -19,13 +19,13 @@ namespace WinCopy {
             paste.Checked=db.AutoPaste; images.Checked=db.CaptureImages; remember.Checked=db.RememberHistory;
             using(var run=Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run")) startup.Checked=run!=null&&run.GetValue("winCopy")!=null;
             flow.Controls.Add(new Label {Text="不记录以下应用（进程名，用英文逗号分隔）",AutoSize=true,Margin=new Padding(0,14,0,6)}); excluded.Text=db.ExcludedApps; var exclusionFrame=Design.Input(excluded); exclusionFrame.Tag="input"; exclusionFrame.Dock=DockStyle.None; flow.Controls.Add(exclusionFrame);
-            flow.Controls.Add(new Label {Text="数据保存在 %LOCALAPPDATA%\\winCopy\n使用当前 Windows 账户加密，无网络通信。\n应用排除按复制时前台窗口识别；无法识别所有密码内容。",AutoSize=true,ForeColor=Color.DimGray,Margin=new Padding(0,12,0,14)});
+            flow.Controls.Add(new Label {Text="数据保存在 %LOCALAPPDATA%\\winCopy\n历史使用当前 Windows 账户加密。检查更新仅连接 GitHub。\n应用排除按复制时前台窗口识别；无法识别所有密码内容。",AutoSize=true,ForeColor=Color.DimGray,Margin=new Padding(0,12,0,14)});
             // Actions are outside the scrollable content and use preferred heights, including DPI scaling.
             var footer=new TableLayoutPanel {Dock=DockStyle.Fill,AutoSize=true,ColumnCount=1,RowCount=2,Margin=Padding.Empty,Padding=new Padding(0,12,0,0)};
             footer.RowStyles.Add(new RowStyle(SizeType.AutoSize)); footer.RowStyles.Add(new RowStyle(SizeType.AutoSize)); root.Controls.Add(footer,0,1);
             var transfer=new FlowLayoutPanel {Dock=DockStyle.Fill,AutoSize=true,WrapContents=true,Margin=Padding.Empty};
             var import=ActionButton("导入片段 XML"); import.Click+=delegate{if(ImportAction!=null) ImportAction();}; transfer.Controls.Add(import);
-            var export=ActionButton("导出片段 XML"); export.Click+=delegate{if(ExportAction!=null) ExportAction();}; transfer.Controls.Add(export); footer.Controls.Add(transfer,0,0);
+            var export=ActionButton("导出片段 XML"); export.Click+=delegate{if(ExportAction!=null) ExportAction();}; transfer.Controls.Add(export); var update=ActionButton("检查更新"); update.Click+=delegate{if(UpdateAction!=null)UpdateAction();}; transfer.Controls.Add(update); footer.Controls.Add(transfer,0,0);
             var actions=new FlowLayoutPanel {Dock=DockStyle.Fill,AutoSize=true,FlowDirection=FlowDirection.RightToLeft,WrapContents=true,Margin=Padding.Empty};
             var ok=ActionButton("保存设置"); ok.DialogResult=DialogResult.OK; var cancel=ActionButton("取消"); cancel.DialogResult=DialogResult.Cancel; actions.Controls.Add(ok);actions.Controls.Add(cancel); footer.Controls.Add(actions,0,1); AcceptButton=ok;CancelButton=cancel;
             Action resize=delegate {

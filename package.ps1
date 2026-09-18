@@ -1,4 +1,4 @@
-param([string]$IsccPath = '')
+﻿param([string]$IsccPath = '')
 $ErrorActionPreference = 'Stop'
 $version = (Get-Content -LiteralPath (Join-Path $PSScriptRoot 'VERSION') -Raw).Trim()
 if ($version -notmatch '^\d+\.\d+\.\d+$') { throw 'VERSION must use major.minor.patch.' }
@@ -7,6 +7,12 @@ $dist = Join-Path $PSScriptRoot 'dist'
 $test = Start-Process -FilePath (Join-Path $dist 'winCopy.exe') -ArgumentList '--self-test' -Wait -PassThru -WindowStyle Hidden
 Get-Content -LiteralPath (Join-Path $dist 'self-test-result.txt')
 if ($test.ExitCode -ne 0) { throw 'Self-test failed.' }
+$compiler = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
+if (-not (Test-Path $compiler)) { $compiler = Join-Path $env:WINDIR 'Microsoft.NET\Framework\v4.0.30319\csc.exe' }
+& $compiler /nologo /target:exe /codepage:65001 "/out:$dist\UpdateRegression.exe" "/reference:$dist\winCopy.exe" (Join-Path $PSScriptRoot 'tests\UpdateRegression.cs')
+if ($LASTEXITCODE -ne 0) { throw 'Update test compilation failed.' }
+& (Join-Path $dist 'UpdateRegression.exe')
+if ($LASTEXITCODE -ne 0) { throw 'Update regression tests failed.' }
 if (-not $IsccPath) {
     $IsccPath = @("${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe", "$env:ProgramFiles\Inno Setup 6\ISCC.exe") | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
 }

@@ -57,7 +57,7 @@ namespace WinCopy {
             tray.Icon = Icon; tray.Text = "winCopy · Ctrl + Alt + " + db.Hotkey; tray.Visible = true;
             var menu = new ContextMenuStrip(); menu.Items.Add("打开 winCopy", null, delegate { OpenPanel(); });
             var pause = new ToolStripMenuItem("暂停记录") { CheckOnClick = true }; pause.CheckedChanged += delegate { paused = pause.Checked; SetStatus(paused ? "已暂停记录" : "正在记录剪贴板"); }; menu.Items.Add(pause);
-            menu.Items.Add("设置", null, delegate { OpenPanel(); Settings(); }); menu.Items.Add(new ToolStripSeparator());
+            menu.Items.Add("设置", null, delegate { OpenPanel(); Settings(); }); menu.Items.Add("检查更新", null, delegate { ShowUpdate(); }); menu.Items.Add(new ToolStripSeparator());
             menu.Items.Add("退出 winCopy", null, delegate { quitting = true; Close(); }); tray.ContextMenuStrip = menu; tray.DoubleClick += delegate { OpenPanel(); };
             Shown += delegate { if (startupHidden) Hide(); else search.Focus(); };
             FormClosing += delegate(object sender, FormClosingEventArgs e) { if (!quitting && e.CloseReason == CloseReason.UserClosing) { e.Cancel = true; Hide(); } else { SaveNow(); tray.Visible = false; tray.Dispose(); capture.Dispose(); foreground.Dispose(); save.Dispose(); } };
@@ -181,7 +181,7 @@ namespace WinCopy {
         }
         void Settings() {
             using (var f = new SettingsDialog(db)) {
-                f.ExportAction = ExportSnippets; f.ImportAction = ImportSnippets;
+                f.UpdateAction = delegate { ShowUpdate(f); }; f.ExportAction = ExportSnippets; f.ImportAction = ImportSnippets;
                 if (f.ShowDialog(this) != DialogResult.OK) return;
                 if (f.Shortcut != db.Hotkey) { Native.UnregisterHotKey(Handle, 1); if (!RegisterShortcut(f.Shortcut)) { RegisterShortcut(db.Hotkey); MessageBox.Show("快捷键被占用，设置未保存。", "winCopy"); return; } }
                 db.Hotkey = f.Shortcut; db.Limit = f.HistoryLimit; db.RetentionDays = f.Days; db.AutoPaste = f.AutoPaste; db.CaptureImages = f.Images; db.RememberHistory = f.Remember; db.ExcludedApps = f.Excluded;
