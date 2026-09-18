@@ -8,9 +8,9 @@ namespace WinCopy {
         readonly ToolTip tips=new ToolTip();
         void BuildBrand(TableLayoutPanel header) {
             var brand=new Panel {Dock=DockStyle.Fill,Margin=Padding.Empty};
-            var title=new Label {Text="winCopy",Font=new Font(Font.FontFamily,17,FontStyle.Bold),ForeColor=Ink,AutoSize=true,Location=new Point(0,0)};
-            activityLabel.Text="留住灵感，让复制更轻松";activityLabel.ForeColor=Muted;activityLabel.Font=new Font(Font.FontFamily,9);activityLabel.AutoSize=true;activityLabel.Location=new Point(1,33);
-            brand.Controls.Add(title);brand.Controls.Add(activityLabel);header.Controls.Add(brand,0,0);EnableWindowDrag(brand);EnableWindowDrag(title);EnableWindowDrag(activityLabel);
+            var title=new Label {Text="winCopy",Font=new Font(Font.FontFamily,17,FontStyle.Bold),ForeColor=Ink,AutoSize=true,Location=new Point(48,0)};
+            activityLabel.Text="留住灵感，让复制更轻松";activityLabel.ForeColor=Muted;activityLabel.Font=new Font(Font.FontFamily,9);activityLabel.AutoSize=true;activityLabel.Location=new Point(49,33);
+            using(var icon=Brand.LoadIcon()){var mark=new PictureBox {Image=icon.ToBitmap(),SizeMode=PictureBoxSizeMode.Zoom,Size=new Size(38,38),Location=new Point(0,5)}; brand.Controls.Add(mark); EnableWindowDrag(mark);}brand.Controls.Add(title);brand.Controls.Add(activityLabel);header.Controls.Add(brand,0,0);EnableWindowDrag(brand);EnableWindowDrag(title);EnableWindowDrag(activityLabel);
         }
         void DrawModernItem(object sender,DrawItemEventArgs e) {
             if(e.Index<0)return;var c=(Clip)list.Items[e.Index];bool selected=(e.State&DrawItemState.Selected)!=0;var r=e.Bounds;

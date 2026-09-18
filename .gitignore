@@ -9,3 +9,4 @@ artifacts/
 .vs/
 *.dat
 *.tmp
+assets/*.exe

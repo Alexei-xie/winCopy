@@ -1,4 +1,4 @@
-#ifndef AppVersion
+﻿#ifndef AppVersion
   #define AppVersion "1.0.0"
 #endif
 
@@ -20,6 +20,7 @@ OutputBaseFilename=winCopy-{#AppVersion}-setup
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
+SetupIconFile=..\assets\winCopy.ico
 LicenseFile=..\LICENSE
 UninstallDisplayIcon={app}\winCopy.exe
 AppMutex=Local\winCopy.Desktop

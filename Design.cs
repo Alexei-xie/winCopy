@@ -25,7 +25,7 @@ namespace WinCopy {
             input.GotFocus+=delegate{frame.BorderColor=Accent;frame.Invalidate();};input.LostFocus+=delegate{frame.BorderColor=Border;frame.Invalidate();};return frame;
         }
         public static void Dialog(Form form) {
-            form.BackColor=Canvas;form.ForeColor=Ink;
+            form.Icon=Brand.LoadIcon();form.BackColor=Canvas;form.ForeColor=Ink;
             Apply(form);
         }
         static void Apply(Control c) {

@@ -64,12 +64,7 @@ namespace WinCopy {
             KeyDown += HandleKeys;
             RefreshItems();
         }
-        Icon MakeIcon() {
-            using (var bitmap = new Bitmap(32, 32)) using (var g = Graphics.FromImage(bitmap)) {
-                g.SmoothingMode = SmoothingMode.AntiAlias; g.Clear(Accent); using (var p = new Pen(Color.White, 2)) { g.DrawRectangle(p, 9, 9, 15, 17); g.DrawRectangle(p, 6, 6, 15, 17); }
-                var h = bitmap.GetHicon(); try { return (Icon)Icon.FromHandle(h).Clone(); } finally { DestroyIcon(h); }
-            }
-        }
+        Icon MakeIcon() { return Brand.LoadIcon(); }
         [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)] static extern IntPtr SendMessage(IntPtr handle, int message, IntPtr wparam, string text);
         [System.Runtime.InteropServices.DllImport("user32.dll")] static extern bool DestroyIcon(IntPtr icon);
         Button Button(string text, Action action, bool primary = false) {

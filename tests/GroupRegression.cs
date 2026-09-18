@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Drawing;
@@ -11,8 +11,8 @@ class GroupRegression {
         var db=new Database();var first=new Clip {Snippet=true,Title="工作邮箱",Group="邮箱",Text="example@example.com"};var second=new Clip {Snippet=true,Title="签名",Group="工作",Text="谢谢"};db.Items.Add(first);db.Items.Add(second);db.Items.Add(new Clip{Group="普通历史",Text="history"});db.GroupOrder.AddRange(new[]{"工作","空分组","邮箱","工作"});db.Prune();
         Check(db.GetGroups().SequenceEqual(new[]{"工作","邮箱"}),"Only populated snippet groups, preserving order");
         using(var editor=new SnippetEditor(null,db.GetGroups())){
-            var group=(ComboBox)typeof(SnippetEditor).GetField("group",BindingFlags.Instance|BindingFlags.NonPublic).GetValue(editor);
-            Check(group.DropDownStyle==ComboBoxStyle.DropDown,"Editable dropdown");Check(group.Items.Count==2,"Existing groups populated");group.SelectedItem="邮箱";Check(editor.GroupValue=="邮箱","Select existing group");group.Text="  新分组  ";Check(editor.GroupValue=="新分组","Type and trim a new group");Check(db.GetGroups().Length==2,"Unsaved names do not create groups");
+            var group=(GroupPicker)typeof(SnippetEditor).GetField("group",BindingFlags.Instance|BindingFlags.NonPublic).GetValue(editor);
+            Check(group.Controls.OfType<TextBox>().Any(),"Editable custom picker");Check(group.Items.Count==2,"Existing groups populated");group.SelectedItem="邮箱";Check(editor.GroupValue=="邮箱","Select existing group");group.Text="  新分组  ";Check(editor.GroupValue=="新分组","Type and trim a new group");Check(db.GetGroups().Length==2,"Unsaved names do not create groups");
             if(Array.IndexOf(args,"--ui")>=0){Application.EnableVisualStyles();editor.Show();Application.DoEvents();using(var b=new Bitmap(editor.Width,editor.Height)){editor.DrawToBitmap(b,new Rectangle(Point.Empty,editor.Size));b.Save(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"group-editor-preview.png"));}}
         }
         using(var editor=new SnippetEditor(first,db.GetGroups()))Check(editor.GroupValue=="邮箱","Edit retains original group");

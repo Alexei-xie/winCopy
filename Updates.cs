@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -67,7 +67,7 @@ namespace WinCopy {
         bool checking;
         string downloadUrl;
         public UpdateDialog() {
-            Text="winCopy · 检查更新";Font=new Font("Microsoft YaHei UI",10);ClientSize=new Size(540,420);MinimumSize=new Size(480,370);StartPosition=FormStartPosition.CenterParent;MinimizeBox=false;MaximizeBox=false;BackColor=Design.Canvas;
+            Icon=Brand.LoadIcon();Text="winCopy · 检查更新";Font=new Font("Microsoft YaHei UI",10);ClientSize=new Size(540,420);MinimumSize=new Size(480,370);StartPosition=FormStartPosition.CenterParent;MinimizeBox=false;MaximizeBox=false;BackColor=Design.Canvas;
             var grid=new TableLayoutPanel {Dock=DockStyle.Fill,Padding=new Padding(24),ColumnCount=1,RowCount=5};
             grid.RowStyles.Add(new RowStyle(SizeType.Absolute,44));grid.RowStyles.Add(new RowStyle(SizeType.Absolute,58));grid.RowStyles.Add(new RowStyle(SizeType.Percent,100));grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));Controls.Add(grid);
             heading.Text="检查新版本";heading.Font=new Font(Font.FontFamily,18,FontStyle.Bold);heading.Dock=DockStyle.Fill;grid.Controls.Add(heading,0,0);
