@@ -1,0 +1,77 @@
+name: Build Windows installer
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate release version
+        shell: pwsh
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          $version = (Get-Content VERSION -Raw).Trim()
+          if ($version -notmatch '^\d+\.\d+\.\d+$') { throw 'Invalid VERSION' }
+          if ($env:REF_TYPE -eq 'tag' -and $env:REF_NAME -ne "v$version") { throw 'Tag must match VERSION' }
+      - name: Ensure Inno Setup
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) {
+            choco install innosetup --yes --no-progress
+            if ($LASTEXITCODE -ne 0) { throw 'Inno Setup installation failed' }
+          }
+      - name: Build, test and package
+        shell: pwsh
+        run: ./package.ps1
+      - name: Smoke test installation and removal
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem artifacts/*-setup.exe | Select-Object -First 1
+          $target = Join-Path $env:RUNNER_TEMP 'winCopy-install-test'
+          $p = Start-Process $installer.FullName -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR=`"$target`"" -Wait -PassThru
+          if ($p.ExitCode -ne 0 -or -not (Test-Path "$target/winCopy.exe")) { throw 'Install smoke test failed' }
+          $p = Start-Process "$target/unins000.exe" -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART' -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw 'Uninstall smoke test failed' }
+          if (Test-Path "$target/winCopy.exe") { throw 'Application was not removed' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: winCopy-windows
+          path: artifacts/*
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: winCopy-windows
+          path: artifacts
+      - name: Publish release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" artifacts/* --clobber
+          else
+            gh release create "$RELEASE_TAG" artifacts/* --verify-tag --title "winCopy $RELEASE_TAG" --generate-notes
+          fi
