@@ -181,9 +181,9 @@ namespace WinCopy {
         }
         void EditSnippet(Clip original) {
             if (original != null && original.Kind != "文本") { SetStatus("只有文本可以保存为片段"); return; }
-            using (var editor = new SnippetEditor(original)) if (editor.ShowDialog(this) == DialogResult.OK) {
+            using (var editor = new SnippetEditor(original, db.GetGroups())) if (editor.ShowDialog(this) == DialogResult.OK) {
                 var c = original != null && original.Snippet ? original : new Clip(); c.Snippet = true; c.Title = editor.TitleValue; c.Group = editor.GroupValue; c.Text = editor.BodyValue; c.Html = ""; c.Rtf = ""; c.Created = DateTime.Now;
-                if (!db.Items.Contains(c)) db.Items.Insert(0, c); view = "常用片段"; Changed();
+                if (!db.Items.Contains(c)) db.Items.Insert(0, c); view = "常用片段"; Changed(); groups.SelectedItem = c.Group; RefreshItems();
             }
         }
         void Settings() {

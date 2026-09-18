@@ -47,7 +47,16 @@ namespace WinCopy {
             Items.Insert(0, clip); Prune();
         }
         public int ClearHistory() { return Items.RemoveAll(x => !x.Snippet && !x.Pinned); }
+        public string[] GetGroups() {
+            var available=Items.Where(x=>x.Snippet).Select(x=>x.Group).Distinct().ToList();
+            return GroupOrder.Where(available.Contains).Concat(available.Where(x=>!GroupOrder.Contains(x)).OrderBy(x=>x)).Distinct().ToArray();
+        }
+        public void RemoveEmptyGroups() {
+            var available=Items.Where(x=>x.Snippet).Select(x=>x.Group).Distinct().ToList();
+            GroupOrder=GroupOrder.Where(available.Contains).Distinct().ToList();
+        }
         public void Prune() {
+            RemoveEmptyGroups();
             Items.RemoveAll(x => !x.Snippet && !x.Pinned && x.Created < DateTime.Now.AddDays(-Math.Max(1, RetentionDays)));
             var excess = Items.Where(x => !x.Snippet && !x.Pinned).Skip(Math.Max(20, Math.Min(2000, Limit))).ToList();
             foreach (var x in excess) Items.Remove(x);

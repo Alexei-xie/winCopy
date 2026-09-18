@@ -19,6 +19,11 @@ namespace WinCopy {
             input.BorderStyle=BorderStyle.None;input.BackColor=Color.White;input.ForeColor=Ink;input.Dock=DockStyle.Fill;frame.Controls.Add(input);
             input.GotFocus+=delegate{frame.BorderColor=Accent;frame.Invalidate();};input.LostFocus+=delegate{frame.BorderColor=Border;frame.Invalidate();};return frame;
         }
+        public static Control Input(ComboBox input) {
+            var frame=new RoundedPanel {Dock=DockStyle.Fill,BackColor=Color.White,Padding=new Padding(10,7,10,7),Margin=new Padding(0,0,0,8),Radius=10};
+            input.FlatStyle=FlatStyle.Flat;input.BackColor=Color.White;input.ForeColor=Ink;input.Dock=DockStyle.Top;frame.Controls.Add(input);
+            input.GotFocus+=delegate{frame.BorderColor=Accent;frame.Invalidate();};input.LostFocus+=delegate{frame.BorderColor=Border;frame.Invalidate();};return frame;
+        }
         public static void Dialog(Form form) {
             form.BackColor=Canvas;form.ForeColor=Ink;
             Apply(form);
