@@ -10,19 +10,19 @@ namespace WinCopy {
             var brand=new Panel {Dock=DockStyle.Fill,Margin=Padding.Empty};
             var title=new Label {Text="winCopy",Font=new Font(Font.FontFamily,17,FontStyle.Bold),ForeColor=Ink,AutoSize=true,Location=new Point(48,0)};
             activityLabel.Text="留住灵感，让复制更轻松";activityLabel.ForeColor=Muted;activityLabel.Font=new Font(Font.FontFamily,9);activityLabel.AutoSize=true;activityLabel.Location=new Point(49,33);
-            {var mark=new PictureBox {Image=Brand.LoadLogo(),SizeMode=PictureBoxSizeMode.Zoom,Size=new Size(38,38),Location=new Point(0,5)}; brand.Controls.Add(mark); mark.Disposed+=delegate{if(mark.Image!=null)mark.Image.Dispose();}; EnableWindowDrag(mark);}brand.Controls.Add(title);brand.Controls.Add(activityLabel);header.Controls.Add(brand,0,0);EnableWindowDrag(brand);EnableWindowDrag(title);EnableWindowDrag(activityLabel);
+            using(var icon=Brand.LoadIcon()){var mark=new PictureBox {Image=icon.ToBitmap(),SizeMode=PictureBoxSizeMode.Zoom,Size=new Size(38,38),Location=new Point(0,5)}; brand.Controls.Add(mark); EnableWindowDrag(mark);}brand.Controls.Add(title);brand.Controls.Add(activityLabel);header.Controls.Add(brand,0,0);EnableWindowDrag(brand);EnableWindowDrag(title);EnableWindowDrag(activityLabel);
         }
         void DrawModernItem(object sender,DrawItemEventArgs e) {
             if(e.Index<0)return;var c=(Clip)list.Items[e.Index];bool selected=(e.State&DrawItemState.Selected)!=0;var r=e.Bounds;
             using(var background=new SolidBrush(Color.White))e.Graphics.FillRectangle(background,r);
             var card=new Rectangle(r.X+2,r.Y+3,r.Width-5,r.Height-6);
-            Design.Surface(e.Graphics,card,selected?Color.FromArgb(15,105,215):Color.White,11,selected?Color.FromArgb(15,105,215):Color.Empty);
-            Design.Surface(e.Graphics,new Rectangle(r.X+12,r.Y+15,34,34),selected?Color.FromArgb(44,126,225):Design.Canvas,9,Color.Empty);
+            Design.Surface(e.Graphics,card,selected?Color.FromArgb(239,238,255):Color.White,11,selected?Color.FromArgb(215,212,248):Color.Empty);
+            Design.Surface(e.Graphics,new Rectangle(r.X+12,r.Y+15,34,34),selected?Color.FromArgb(225,222,252):Design.Canvas,9,Color.Empty);
             string icon=c.Pinned?"★":c.Kind=="图片"?"▧":c.Kind=="文件"?"▤":"T";
-            TextRenderer.DrawText(e.Graphics,icon,Font,new Rectangle(r.X+12,r.Y+15,34,34),selected?Color.White:Accent,TextFormatFlags.HorizontalCenter|TextFormatFlags.VerticalCenter);
-            TextRenderer.DrawText(e.Graphics,c.Preview.Replace("\r"," ").Replace("\n","  ").Replace("\t"," "),Font,new Rectangle(r.X+58,r.Y+10,r.Width-88,24),selected?Color.White:Ink,TextFormatFlags.EndEllipsis|TextFormatFlags.SingleLine|TextFormatFlags.NoPrefix);
-            using(var small=new Font(Font.FontFamily,8.5f))TextRenderer.DrawText(e.Graphics,(c.Snippet?c.Group:c.Kind)+"  ·  "+c.Created.ToString("HH:mm")+(String.IsNullOrEmpty(c.Source)?"":"  ·  "+c.Source),small,new Rectangle(r.X+58,r.Y+37,r.Width-85,20),selected?Color.FromArgb(228,238,255):Muted,TextFormatFlags.EndEllipsis|TextFormatFlags.SingleLine|TextFormatFlags.NoPrefix);
-            if(selected)TextRenderer.DrawText(e.Graphics,"↵",Font,new Rectangle(r.Right-28,r.Y+18,20,25),Color.White,TextFormatFlags.VerticalCenter);
+            TextRenderer.DrawText(e.Graphics,icon,Font,new Rectangle(r.X+12,r.Y+15,34,34),Accent,TextFormatFlags.HorizontalCenter|TextFormatFlags.VerticalCenter);
+            TextRenderer.DrawText(e.Graphics,c.Preview.Replace("\r"," ").Replace("\n","  ").Replace("\t"," "),Font,new Rectangle(r.X+58,r.Y+10,r.Width-88,24),Ink,TextFormatFlags.EndEllipsis|TextFormatFlags.SingleLine|TextFormatFlags.NoPrefix);
+            using(var small=new Font(Font.FontFamily,8.5f))TextRenderer.DrawText(e.Graphics,(c.Snippet?c.Group:c.Kind)+"  ·  "+c.Created.ToString("HH:mm")+(String.IsNullOrEmpty(c.Source)?"":"  ·  "+c.Source),small,new Rectangle(r.X+58,r.Y+37,r.Width-85,20),Muted,TextFormatFlags.EndEllipsis|TextFormatFlags.SingleLine|TextFormatFlags.NoPrefix);
+            if(selected)TextRenderer.DrawText(e.Graphics,"↵",Font,new Rectangle(r.Right-28,r.Y+18,20,25),Accent,TextFormatFlags.VerticalCenter);
         }
         void BuildActions(TableLayoutPanel layout) {
             var footer=new TableLayoutPanel {Dock=DockStyle.Fill,ColumnCount=5,Margin=new Padding(0,6,0,0)};

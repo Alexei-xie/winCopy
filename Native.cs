@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -23,13 +23,6 @@ namespace WinCopy {
         [StructLayout(LayoutKind.Explicit)] public struct UNION { [FieldOffset(0)] public KEYBOARD keyboard; [FieldOffset(0)] public MOUSE mouse; }
         [StructLayout(LayoutKind.Sequential)] public struct KEYBOARD { public ushort key, scan; public uint flags, time; public UIntPtr extra; }
         [StructLayout(LayoutKind.Sequential)] public struct MOUSE { public int x, y; public uint data, flags, time; public UIntPtr extra; }
-        [DllImport("user32.dll", CharSet=CharSet.Unicode)] static extern int GetClassName(IntPtr h, System.Text.StringBuilder name, int count);
-        public static bool IsPasteTarget(IntPtr h) {
-            if(h==IntPtr.Zero || !IsWindow(h) || ProcessName(h)==Process.GetCurrentProcess().ProcessName)return false;
-            var name=new System.Text.StringBuilder(256); GetClassName(h,name,name.Capacity);
-            string value=name.ToString();
-            return value!="Shell_TrayWnd" && value!="Shell_SecondaryTrayWnd" && value!="NotifyIconOverflowWindow" && value!="TopLevelWindowForOverflowXamlIsland";
-        }
         public static bool Paste() {
             INPUT[] keys = new INPUT[4];
             ushort[] codes = { 0x11, 0x56, 0x56, 0x11 };

@@ -30,7 +30,7 @@ namespace WinCopy {
             base.OnPaint(e); var state = e.Graphics.Save(); e.Graphics.SetClip(new Rectangle(0, 0, ViewWidth, Height)); int left = -offset;
             for (int i = 0; i < items.Count; i++) {
                 int width = ItemWidth(items[i]); var rect = new Rectangle(left, 1, width, Math.Max(1, Height-3)); bool selected = items[i] == active;
-                Design.Surface(e.Graphics, new Rectangle(rect.X+1,rect.Y+1,rect.Width-2,rect.Height-2), selected ? Color.FromArgb(224,235,251) : BackColor, 10, Color.Empty);
+                Design.Surface(e.Graphics, new Rectangle(rect.X+1,rect.Y+1,rect.Width-2,rect.Height-2), selected ? Color.FromArgb(232,230,252) : BackColor, 10, Color.Empty);
                 TextRenderer.DrawText(e.Graphics, items[i], Font, rect, selected ? Design.Accent : ForeColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix | TextFormatFlags.PreserveGraphicsClipping);
                 if (dragging && insertion == i) using (var pen = new Pen(Design.Accent, 2)) e.Graphics.DrawLine(pen, left, 3, left, Height-3);
                 left += width + 4;

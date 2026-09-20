@@ -55,24 +55,24 @@ namespace WinCopy {
             b.Font = new Font(Font.FontFamily, 9); b.FlatAppearance.BorderSize = 0; b.BackColor = Color.White; return b;
         }
         void BuildUi() {
-            var layout = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(16, 6, 16, 12), ColumnCount = 1, RowCount = 8 };
-            foreach (int h in new[] { 52, 56, 40, 32 }) layout.RowStyles.Add(new RowStyle(SizeType.Absolute, h));
+            var layout = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(20, 16, 20, 12), ColumnCount = 1, RowCount = 8 };
+            foreach (int h in new[] { 68, 56, 40, 32 }) layout.RowStyles.Add(new RowStyle(SizeType.Absolute, h));
             layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
             foreach (int h in new[] { 108, 50, 24 }) layout.RowStyles.Add(new RowStyle(SizeType.Absolute, h));
             Controls.Add(layout);
-            var header = new MacTitleBar("历史与片段",Hide) {Dock=DockStyle.Fill,Margin=Padding.Empty,Font=Font};
-            header.ReadPosition=()=>Location;header.MoveWindow=p=>Location=p;header.DragStarted=delegate{movingPopup=true;};
-            header.DragEnded=delegate{movingPopup=false;Location=MacChrome.Clamp(Location,Size);db.PopupPositionSet=true;db.PopupX=Left;db.PopupY=Top;save.Stop();save.Start();};
+            var header = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 3, Margin = Padding.Empty };
+            header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100)); header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 36)); header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 32));
+            BuildBrand(header);
             var more = CompactButton("···", delegate {}, 32); more.AccessibleName = "更多操作";
-            var menu = new ClipMenu();
+            var menu = new ContextMenuStrip();
             menu.Items.Add("新建片段", null, delegate { EditSnippet(null); });
             menu.Items.Add("偏好设置", null, delegate { Settings(); }); menu.Items.Add("检查更新", null, delegate { ShowUpdate(); });
             var pause = new ToolStripMenuItem("暂停记录"); pause.Click += delegate { paused = !paused; RefreshItems(); }; menu.Items.Add(pause);
             menu.Opening += delegate { pause.Checked = paused; };
             menu.Items.Add(new ToolStripSeparator()); menu.Items.Add("清空未收藏历史", null, delegate { ClearHistory(); });
             menu.Items.Add("退出 winCopy", null, delegate { quitting = true; Close(); }); TrackMenu(menu);
-            more.Click += delegate { menu.Show(more, new Point(0, more.Height)); }; more.Location=new Point(42,8);header.Controls.Add(more);
-            layout.Controls.Add(header, 0, 0); EnableWindowDrag(layout); EnableWindowDrag(status);
+            more.Click += delegate { menu.Show(more, new Point(0, more.Height)); }; header.Controls.Add(more, 1, 0);
+            var close = CompactButton("×", Hide, 28); close.AccessibleName = "收起面板"; header.Controls.Add(close, 2, 0); layout.Controls.Add(header, 0, 0); EnableWindowDrag(header); EnableWindowDrag(header.Controls[0]); EnableWindowDrag(layout); EnableWindowDrag(status);
             var searchBox = new RoundedPanel { Dock = DockStyle.Fill, BackColor = Color.White, Padding = new Padding(14, 12, 14, 10), Margin = new Padding(0, 2, 0, 5) };
             search.BorderStyle = BorderStyle.None; search.Font = new Font(Font.FontFamily, 11); search.Dock = DockStyle.Fill; search.AccessibleName = "搜索剪贴板历史";
             search.HandleCreated += delegate { SendMessage(search.Handle, 0x1501, (IntPtr)1, "搜索内容、来源或片段…"); }; search.TextChanged += delegate { RefreshItems(); }; searchBox.Controls.Add(search); layout.Controls.Add(searchBox, 0, 1);
@@ -86,7 +86,7 @@ namespace WinCopy {
             var content = new Panel { Dock = DockStyle.Fill }; preview.Dock = DockStyle.Fill; preview.Multiline = true; preview.ReadOnly = true; preview.BorderStyle = BorderStyle.None; preview.BackColor = detail.BackColor; preview.ScrollBars = ScrollBars.Vertical; preview.Font = new Font(Font.FontFamily, 9); picture.Dock = DockStyle.Fill; picture.SizeMode = PictureBoxSizeMode.Zoom; content.Controls.Add(preview); content.Controls.Add(picture); detail.Controls.Add(content, 0, 1); layout.Controls.Add(detail, 0, 5);
             BuildActions(layout);
             status.Dock = DockStyle.Fill; status.AutoEllipsis = true; status.Font = new Font(Font.FontFamily, 8); status.ForeColor = Muted; status.TextAlign = ContentAlignment.MiddleLeft; layout.Controls.Add(status, 0, 7);
-            var context = new ClipMenu(); context.Items.Add("复制", null, delegate { UseSelected(false, true); }); context.Items.Add("以纯文本粘贴", null, delegate { UseSelected(true, false); }); context.Items.Add("收藏 / 取消收藏", null, delegate { TogglePin(); }); context.Items.Add("编辑 / 保存为片段", null, delegate { if (Selected != null) EditSnippet(Selected); }); context.Items.Add("删除", null, delegate { DeleteSelected(); }); TrackMenu(context); list.ContextMenuStrip = context;
+            var context = new ContextMenuStrip(); context.Items.Add("复制", null, delegate { UseSelected(false, true); }); context.Items.Add("以纯文本粘贴", null, delegate { UseSelected(true, false); }); context.Items.Add("收藏 / 取消收藏", null, delegate { TogglePin(); }); context.Items.Add("编辑 / 保存为片段", null, delegate { if (Selected != null) EditSnippet(Selected); }); context.Items.Add("删除", null, delegate { DeleteSelected(); }); TrackMenu(context); list.ContextMenuStrip = context;
             list.MouseDown += delegate(object s, MouseEventArgs e) { if (e.Button == MouseButtons.Right) { int index = list.IndexFromPoint(e.Location); if (index >= 0) list.SelectedIndex = index; } };
         }
         void TogglePin() { var c = Selected; if (c != null) { c.Pinned = !c.Pinned; Changed(); } }

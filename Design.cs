@@ -5,7 +5,7 @@ using System.Windows.Forms;
 
 namespace WinCopy {
     internal static class Design {
-        public static readonly Color Ink = Color.FromArgb(32,39,60), Muted = Color.FromArgb(116,125,147), Accent = Color.FromArgb(15,105,215), Canvas = Color.FromArgb(244,244,246), Border = Color.FromArgb(218,218,224);
+        public static readonly Color Ink = Color.FromArgb(32,39,60), Muted = Color.FromArgb(116,125,147), Accent = Color.FromArgb(91,86,224), Canvas = Color.FromArgb(246,247,252), Border = Color.FromArgb(229,232,243);
         public static GraphicsPath Round(Rectangle r, int radius) {
             var p=new GraphicsPath(); int d=Math.Max(2,Math.Min(radius*2,Math.Min(r.Width,r.Height)));
             p.AddArc(r.Left,r.Top,d,d,180,90);p.AddArc(r.Right-d,r.Top,d,d,270,90);p.AddArc(r.Right-d,r.Bottom-d,d,d,0,90);p.AddArc(r.Left,r.Bottom-d,d,d,90,90);p.CloseFigure();return p;
@@ -26,7 +26,7 @@ namespace WinCopy {
         }
         public static void Dialog(Form form) {
             form.Icon=Brand.LoadIcon();form.BackColor=Canvas;form.ForeColor=Ink;
-            Apply(form); MacChrome.Attach(form);
+            Apply(form);
         }
         static void Apply(Control c) {
             foreach(Control child in c.Controls) {
@@ -50,7 +50,7 @@ namespace WinCopy {
         protected override void OnPaint(PaintEventArgs e){
             e.Graphics.Clear(Parent==null?Design.Canvas:Parent.BackColor);
             bool primary=ForeColor.ToArgb()==Color.White.ToArgb();var fill=Enabled?BackColor:Color.FromArgb(239,241,247);
-            if(Enabled&&(hover||pressed))fill=primary?(pressed?Color.FromArgb(10,78,173):Color.FromArgb(12,91,193)):(pressed?Color.FromArgb(224,227,243):Color.FromArgb(235,237,248));
+            if(Enabled&&(hover||pressed))fill=primary?(pressed?Color.FromArgb(64,58,181):Color.FromArgb(77,70,206)):(pressed?Color.FromArgb(224,227,243):Color.FromArgb(235,237,248));
             Design.Surface(e.Graphics,new Rectangle(1,1,Width-3,Height-3),fill,10,primary?Color.Empty:Design.Border);
             TextRenderer.DrawText(e.Graphics,Text,Font,new Rectangle(Width<40?1:6,2,Width-(Width<40?2:12),Height-4),Enabled?ForeColor:Design.Muted,TextFormatFlags.HorizontalCenter|TextFormatFlags.VerticalCenter|TextFormatFlags.SingleLine|TextFormatFlags.EndEllipsis|TextFormatFlags.NoPadding);
             if(Focused&&ShowFocusCues)using(var path=Design.Round(new Rectangle(4,4,Width-9,Height-9),7))using(var pen=new Pen(primary?Color.White:Design.Accent)){pen.DashStyle=DashStyle.Dot;e.Graphics.DrawPath(pen,path);}
