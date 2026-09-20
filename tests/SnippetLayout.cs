@@ -11,7 +11,7 @@ class SnippetLayout {
         var buttons=All(f).OfType<Button>().Where(x=>x.Text=="保存"||x.Text=="取消").ToList();
         if(buttons.Count!=2)throw new Exception("Missing buttons");
         foreach(var b in buttons){if(b.Height<b.GetPreferredSize(Size.Empty).Height)throw new Exception("Button text clipped"); for(Control p=b.Parent;p!=null;p=p.Parent){if(!p.ClientRectangle.Contains(p.RectangleToClient(b.RectangleToScreen(b.ClientRectangle))))throw new Exception("Button clipped by "+p.GetType().Name);}}
-        var body=All(f).OfType<TextBox>().First(x=>x.Multiline); if(body.Height<80)throw new Exception("Content field too small");
+        var body=All(f).OfType<TextBox>().First(x=>x.Multiline); if(body.Height<80)throw new Exception("Content field too small: body="+body.Size+" form="+f.Size+" min="+f.MinimumSize+" screen="+Screen.FromControl(f).WorkingArea);
     }
     [STAThread]static int Main(){Application.EnableVisualStyles();try{
         foreach(bool edit in new[]{false,true})foreach(float scale in new[]{1f,1.25f,1.5f,2f}){
@@ -23,5 +23,5 @@ class SnippetLayout {
             }
         }
         File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"snippet-layout-result.txt"),"PASS: new/edit dialogs, minimum window, 100/125/150/200% scaled layouts, button clipping, save and cancel actions.");return 0;
-    }catch(Exception ex){File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"snippet-layout-result.txt"),"FAIL: "+ex);return 1;}}
+    }catch(Exception ex){Console.WriteLine(ex);File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"snippet-layout-result.txt"),"FAIL: "+ex);return 1;}}
 }
