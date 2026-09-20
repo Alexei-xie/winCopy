@@ -24,7 +24,7 @@ namespace WinCopy {
         }
     }
     public partial class SettingsDialog : Form {
-        NumericUpDown limit = new NumericUpDown { Minimum = 20, Maximum = 2000 }, days = new NumericUpDown { Minimum = 1, Maximum = 365 };
+        NumericUpDown limit = new BoundedNumber { Minimum = 20, Maximum = 2000 }, days = new BoundedNumber { Minimum = 1, Maximum = 365 };
         ComboBox key = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList };
         CheckBox paste = new ToggleSwitch { Text = "选择内容后自动粘贴到之前的应用" }, images = new ToggleSwitch { Text = "记录图片（单张最多 8 MB）" }, remember = new ToggleSwitch { Text = "退出后保留历史（收藏和片段始终保留）" }, startup = new ToggleSwitch { Text = "登录 Windows 时在托盘启动" };
         TextBox excluded = new TextBox();

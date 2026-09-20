@@ -13,7 +13,7 @@ namespace WinCopy {
             var scroll = new Panel { Dock=DockStyle.Fill, AutoScroll=true, Margin=Padding.Empty }; root.Controls.Add(scroll,0,0);
             var flow = new FlowLayoutPanel { AutoSize=true, AutoSizeMode=AutoSizeMode.GrowAndShrink, FlowDirection=FlowDirection.TopDown, WrapContents=false, Padding=new Padding(4,4,4,12), Margin=Padding.Empty }; scroll.Controls.Add(flow);
             flow.Controls.Add(new Label { Text="让复制更顺手", Font=new Font(Font.FontFamily,18,FontStyle.Bold), AutoSize=true, Margin=new Padding(0,0,0,18) });
-            AddRow(flow,"历史上限（不含收藏与片段）",limit); limit.Value=Math.Max(20,Math.Min(2000,db.Limit)); AddRow(flow,"历史保留天数",days); days.Value=Math.Max(1,Math.Min(365,db.RetentionDays));
+            AddRow(flow,"历史上限（20–2000 条）",limit); limit.Value=Math.Max(20,Math.Min(2000,db.Limit)); AddRow(flow,"保留天数（1–365 天）",days); days.Value=Math.Max(1,Math.Min(365,db.RetentionDays));
             for(char c='A';c<='Z';c++) key.Items.Add(c.ToString()); key.SelectedItem=db.Hotkey; if(key.SelectedIndex<0) key.SelectedItem="V"; AddRow(flow,"呼出快捷键：Ctrl + Alt +",key);
             foreach(var c in new[] {paste,images,remember,startup}) { c.AutoSize=true; c.Margin=new Padding(0,7,0,7); flow.Controls.Add(c); }
             paste.Checked=db.AutoPaste; images.Checked=db.CaptureImages; remember.Checked=db.RememberHistory;

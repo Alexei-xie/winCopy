@@ -56,6 +56,7 @@ namespace WinCopy {
             GroupOrder=GroupOrder.Where(available.Contains).Distinct().ToList();
         }
         public void Prune() {
+            Limit=Math.Max(20,Math.Min(2000,Limit)); RetentionDays=Math.Max(1,Math.Min(365,RetentionDays));
             RemoveEmptyGroups();
             Items.RemoveAll(x => !x.Snippet && !x.Pinned && x.Created < DateTime.Now.AddDays(-Math.Max(1, RetentionDays)));
             var excess = Items.Where(x => !x.Snippet && !x.Pinned).Skip(Math.Max(20, Math.Min(2000, Limit))).ToList();
