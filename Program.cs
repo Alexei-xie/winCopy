@@ -20,7 +20,7 @@ namespace WinCopy {
             using (var mutex = new Mutex(true, "Local\\winCopy.Desktop", out created)) {
                 if (!created) { MessageBox.Show("winCopy 已在运行。请点击系统托盘图标打开。", "winCopy"); return; }
                 Native.SetProcessDPIAware(); Application.EnableVisualStyles(); Application.SetCompatibleTextRenderingDefault(false);
-                Application.Run(new MainWindow(args.Contains("--background")));
+                Application.Run(new MainWindow(args.Contains("--background"), true));
             }
         }
     }
@@ -42,7 +42,8 @@ namespace WinCopy {
         uint ownSequence, pendingSequence;
         int attempts;
         IntPtr target;
-        public MainWindow(bool background) {
+        public MainWindow(bool background) : this(background, false) { }
+        public MainWindow(bool background, bool menuOnStart) {
             startupHidden = background;
             try { store = new StorageLocation(StorageLocation.DefaultDirectory).Resolve(); db = store.Load(); } catch (Exception ex) {
                 db = new Database(); storageBlocked = true;
@@ -52,15 +53,12 @@ namespace WinCopy {
             StartPosition = FormStartPosition.CenterScreen; Font = new Font("Microsoft YaHei UI", 10); BackColor = Color.FromArgb(246, 248, 252); ForeColor = Ink; Icon = MakeIcon();
             KeyPreview = true; SetupPopup(); BuildUi();
             capture.Interval = 90; capture.Tick += CaptureTick;
-            foreground.Interval = 250; foreground.Tick += delegate { var h = Native.GetForegroundWindow(); if (h != IntPtr.Zero && Native.ProcessName(h) != System.Diagnostics.Process.GetCurrentProcess().ProcessName) target = h; }; foreground.Start();
+            foreground.Interval = 250; foreground.Tick += delegate { var h = Native.GetForegroundWindow(); if (Native.IsPasteTarget(h)) target = h; }; foreground.Start();
             save.Interval = 650; save.Tick += delegate { save.Stop(); SaveNow(); };
             tray.Icon = Icon; tray.Text = "winCopy · Ctrl + Alt + " + db.Hotkey; tray.Visible = true;
-            var menu = new ContextMenuStrip(); menu.Items.Add("打开 winCopy", null, delegate { OpenPanel(); });
-            var pause = new ToolStripMenuItem("暂停记录") { CheckOnClick = true }; pause.CheckedChanged += delegate { paused = pause.Checked; SetStatus(paused ? "已暂停记录" : "正在记录剪贴板"); }; menu.Items.Add(pause);
-            menu.Items.Add("设置", null, delegate { OpenPanel(); Settings(); }); menu.Items.Add("检查更新", null, delegate { ShowUpdate(); }); menu.Items.Add(new ToolStripSeparator());
-            menu.Items.Add("退出 winCopy", null, delegate { quitting = true; Close(); }); tray.ContextMenuStrip = menu; tray.DoubleClick += delegate { OpenPanel(); };
-            Shown += delegate { if (startupHidden) Hide(); else search.Focus(); };
-            FormClosing += delegate(object sender, FormClosingEventArgs e) { if (!quitting && e.CloseReason == CloseReason.UserClosing) { e.Cancel = true; Hide(); } else { SaveNow(); tray.Visible = false; tray.Dispose(); capture.Dispose(); foreground.Dispose(); save.Dispose(); } };
+            tray.MouseUp += delegate(object sender, MouseEventArgs e) { if(e.Button==MouseButtons.Left||e.Button==MouseButtons.Right)OpenQuickMenu(); };
+            Shown += delegate { if(startupHidden)Hide(); else if(menuOnStart)BeginInvoke((Action)OpenQuickMenu); else search.Focus(); };
+            FormClosing += delegate(object sender, FormClosingEventArgs e) { if (!quitting && e.CloseReason == CloseReason.UserClosing) { e.Cancel = true; Hide(); } else { SaveNow(); if(quickMenu!=null)quickMenu.Dispose(); tray.Visible = false; tray.Dispose(); capture.Dispose(); foreground.Dispose(); save.Dispose(); } };
             KeyDown += HandleKeys;
             RefreshItems();
         }
@@ -108,7 +106,7 @@ namespace WinCopy {
         protected override void OnHandleDestroyed(EventArgs e) { Native.RemoveClipboardFormatListener(Handle); Native.UnregisterHotKey(Handle, 1); base.OnHandleDestroyed(e); }
         bool RegisterShortcut(string key) { return Native.RegisterHotKey(Handle, 1, 0x4003, (uint)key.ToUpperInvariant()[0]); }
         protected override void WndProc(ref Message m) {
-            if (m.Msg == 0x0312) { OpenPanel(); }
+            if (m.Msg == 0x0312) { OpenQuickMenu(); }
             if (m.Msg == 0x031D && !paused) { pendingSequence = Native.GetClipboardSequenceNumber(); if (pendingSequence != ownSequence) { attempts = 0; capture.Stop(); capture.Start(); } }
             base.WndProc(ref m);
         }
@@ -134,9 +132,10 @@ namespace WinCopy {
             } catch (System.Runtime.InteropServices.ExternalException) { if (++attempts < 8) capture.Start(); else SetStatus("剪贴板忙，本次读取已跳过"); }
             catch (Exception ex) { SetStatus("无法读取该内容：" + ex.Message); }
         }
-        void OpenPanel() { var h = Native.GetForegroundWindow(); if (h != Handle && Native.ProcessName(h) != System.Diagnostics.Process.GetCurrentProcess().ProcessName) target = h; PositionPopup(); Show(); WindowState = FormWindowState.Normal; Native.SetForegroundWindow(Handle); Activate(); search.Focus(); search.SelectAll(); db.Prune(); RefreshItems(); }
-        void UseSelected(bool plain, bool copyOnly) {
-            var c = Selected; if (c == null) return;
+        void OpenPanel() { var h = Native.GetForegroundWindow(); if (Native.IsPasteTarget(h)) target = h; PositionPopup(); Show(); WindowState = FormWindowState.Normal; Native.SetForegroundWindow(Handle); Activate(); search.Focus(); search.SelectAll(); db.Prune(); RefreshItems(); }
+        void UseSelected(bool plain, bool copyOnly) { UseClip(Selected, plain, copyOnly); }
+        void UseClip(Clip c, bool plain, bool copyOnly) {
+            if (c == null) return;
             try {
                 var data = new DataObject();
                 if (c.Image != null && !plain) { using (var ms = new MemoryStream(c.Image)) using (var image = Image.FromStream(ms)) using (var bitmap = new Bitmap(image)) { data.SetData(DataFormats.Bitmap, bitmap); Clipboard.SetDataObject(data, true, 5, 50); } }
