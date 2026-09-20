@@ -29,6 +29,10 @@ if ($LASTEXITCODE -ne 0) { throw 'Numeric regression tests failed.' }
 if ($LASTEXITCODE -ne 0) { throw 'Image test compilation failed.' }
 & (Join-Path $dist 'ImageRegression.exe')
 if ($LASTEXITCODE -ne 0) { throw 'Image regression tests failed.' }
+& $compiler /nologo /target:exe /codepage:65001 "/out:$dist\UsabilityRegression.exe" "/reference:$dist\winCopy.exe" /reference:System.Core.dll /reference:System.Drawing.dll /reference:System.Windows.Forms.dll (Join-Path $PSScriptRoot 'tests\UsabilityRegression.cs')
+if ($LASTEXITCODE -ne 0) { throw 'Usability test compilation failed.' }
+& (Join-Path $dist 'UsabilityRegression.exe')
+if ($LASTEXITCODE -ne 0) { throw 'Usability regression tests failed.' }
 if (-not $IsccPath) {
     $IsccPath = @("${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe", "$env:ProgramFiles\Inno Setup 6\ISCC.exe") | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
 }

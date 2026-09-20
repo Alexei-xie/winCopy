@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -6,8 +6,13 @@ namespace WinCopy {
     public partial class SettingsDialog {
         readonly TextBox storagePath=new TextBox();
         public string StorageDirectory {get{return storagePath.Text; } set{storagePath.Text=value;}}
-        void AddStorageSettings(FlowLayoutPanel flow) {
+        void AddStorageSettings(FlowLayoutPanel flow,Database db) {
             flow.Controls.Add(new Label {Text="存储位置",AutoSize=true,Font=new Font(Font,FontStyle.Bold),Margin=new Padding(0,18,0,8)});
+            var usage=new Label {AutoSize=true,Margin=new Padding(0,0,0,10)};
+            var currentDirectory=storagePath.Text;
+            Shown+=delegate{currentDirectory=storagePath.Text;usage.Text=StorageUsage.Describe(db,currentDirectory);};
+            var refresh=ActionButton("刷新占用统计");refresh.Click+=delegate{usage.Text=StorageUsage.Describe(db,currentDirectory);};
+            flow.Controls.Add(usage);flow.Controls.Add(refresh);
             storagePath.ReadOnly=true;storagePath.Text=StorageLocation.DefaultDirectory;
             var frame=Design.Input(storagePath);frame.Tag="input";frame.Dock=DockStyle.None;flow.Controls.Add(frame);
             var choose=ActionButton("更改存储目录…");

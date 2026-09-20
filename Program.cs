@@ -79,18 +79,21 @@ namespace WinCopy {
             groups.Items.Clear(); groups.Items.Add("所有分组"); foreach (var g in db.Items.Where(x => x.Snippet).Select(x => x.Group).Distinct().OrderBy(x => x)) groups.Items.Add(g);
             groups.SelectedItem = groups.Items.Contains(group) ? group : "所有分组"; groups.Enabled = view == "常用片段"; groups.Visible = false;
             SyncGroupStrip();
+            thumbnails.Retain(db.Items);
             var q = search.Text.Trim();
             var items = db.Items.Where(x => view == "常用片段" ? x.Snippet : view == "收藏" ? x.Pinned : !x.Snippet && (view == "全部历史" || x.Kind == view));
             if (view == "常用片段" && (string)groups.SelectedItem != "所有分组") items = items.Where(x => x.Group == (string)groups.SelectedItem);
-            if (q.Length > 0) items = items.Where(x => (x.Preview + " " + x.Text + " " + x.Source + " " + x.Group).IndexOf(q, StringComparison.OrdinalIgnoreCase) >= 0);
+            if (q.Length > 0) items = items.Where(x => (x.Preview + " " + x.Text + " " + x.Source + " " + (x.Snippet ? x.Group : "")).IndexOf(q, StringComparison.OrdinalIgnoreCase) >= 0);
             list.BeginUpdate(); list.Items.Clear(); foreach (var c in items.OrderByDescending(x => x.Pinned).ThenByDescending(x => x.Created)) list.Items.Add(c); list.EndUpdate();
             foreach (var b in nav) { b.BackColor = b.Text == view ? Accent : Color.FromArgb(247, 248, 250); b.ForeColor = b.Text == view ? Color.White : Ink; }
             loading = false;
             emptyState.Visible = list.Items.Count == 0; emptyState.Text = search.Text.Length > 0 ? "\u6ca1\u6709\u5339\u914d\u7684\u5185\u5bb9" : "\u590d\u5236\u6587\u5b57\u3001\u56fe\u7247\u6216\u6587\u4ef6\u5373\u53ef\u5f00\u59cb"; if (emptyState.Visible) emptyState.BringToFront(); int index = list.Items.Cast<Clip>().ToList().FindIndex(x => x.Id == selectedId); list.SelectedIndex = index >= 0 ? index : list.Items.Count > 0 ? 0 : -1; ShowDetail();
+            if(q.Length>0)sectionLabel.Text="搜索结果 · "+list.Items.Count+" 条";
             SetStatus(String.Format("{0} · {1} 条    Ctrl+Alt+{2}    Enter 粘贴    Esc 收起", paused ? "记录已暂停" : "正在记录", list.Items.Count, db.Hotkey));
         }
         void ShowDetail() {
             if (loading) return; var c = Selected;
+            if(pinAction!=null){pinAction.Text=c!=null&&c.Pinned?"已收藏":"收藏";pinAction.AccessibleName=c!=null&&c.Pinned?"取消收藏当前记录":"收藏当前记录";}
             if (picture.Image != null) { var old = picture.Image; picture.Image = null; old.Dispose(); }
             picture.Visible = c != null && c.Image != null; preview.Visible = !picture.Visible;
             detailTitle.Text = c == null ? "从一次复制开始" : c.Snippet ? c.Title : c.Kind + "预览";
@@ -98,7 +101,7 @@ namespace WinCopy {
             preview.Text = c == null ? "搜索历史、收藏常用内容，或创建你的第一个片段。\r\n\r\nCtrl + Alt + " + db.Hotkey + " 随时呼出。" : c.Text;
             if (picture.Visible) { try { using (var ms = new MemoryStream(c.Image)) using (var image = Image.FromStream(ms)) picture.Image = new Bitmap(image); } catch { picture.Visible = false; preview.Visible = true; preview.Text = "图片数据无法预览"; } }
         }
-        void SetStatus(string message) { status.Text = message; activityLabel.Text = paused ? "记录已暂停 · 在更多菜单中继续" : "留住灵感，让复制更轻松"; }
+        void SetStatus(string message) { status.Text = message; if(!feedbackTimer.Enabled)activityLabel.Text = paused ? "记录已暂停 · 在更多菜单中继续" : "留住灵感，让复制更轻松"; }
         void Changed() { db.Prune(); RefreshItems(); save.Stop(); save.Start(); }
         void SaveNow() { if (storageBlocked) return; try { store.Save(db); } catch (Exception ex) { SetStatus("保存失败：" + ex.Message); } }
         protected override void OnHandleCreated(EventArgs e) {
@@ -146,7 +149,7 @@ namespace WinCopy {
                     Clipboard.SetDataObject(data, true, 5, 50);
                 }
                 ownSequence = Native.GetClipboardSequenceNumber();
-                if (copyOnly || !db.AutoPaste) { SetStatus("已复制到剪贴板"); return; }
+                if (copyOnly || !db.AutoPaste) { NotifyAction("已复制到剪贴板"); return; }
                 var destination = target;
                 if (destination == IntPtr.Zero || !Native.IsWindow(destination)) { SetStatus("已复制，请切换到目标应用并按 Ctrl + V"); return; }
                 Hide(); if (Native.IsIconic(destination)) Native.ShowWindow(destination, 9); Native.SetForegroundWindow(destination);
@@ -160,18 +163,19 @@ namespace WinCopy {
         }
         void HandleKeys(object sender, KeyEventArgs e) {
             if (e.KeyCode == Keys.Escape) { Hide(); e.Handled = true; }
+            else if(e.Control && e.KeyCode==Keys.Z && !search.Focused && !preview.Focused && deletion.Available(DateTime.UtcNow)){UndoDeletion();e.SuppressKeyPress=true;}
             else if (e.Control && e.KeyCode == Keys.F) { search.Focus(); e.SuppressKeyPress = true; }
             else if (e.KeyCode == Keys.Enter && !preview.Focused) { UseSelected(e.Shift, e.Control); e.SuppressKeyPress = true; }
             else if (e.KeyCode == Keys.Down && search.Focused && list.Items.Count > 0) { list.Focus(); e.SuppressKeyPress = true; }
             else if (e.KeyCode == Keys.Delete && list.Focused) { DeleteSelected(); e.SuppressKeyPress = true; }
         }
-        void DeleteSelected() { var c = Selected; if (c == null) return; if ((c.Pinned || c.Snippet) && MessageBox.Show("删除此收藏或片段？", "winCopy", MessageBoxButtons.YesNo) != DialogResult.Yes) return; db.Items.Remove(c); Changed(); }
+        void DeleteSelected() { var c = Selected; if (c == null) return; if ((c.Pinned || c.Snippet) && MessageBox.Show("删除此收藏或片段？", "winCopy", MessageBoxButtons.YesNo) != DialogResult.Yes) return; ClearUndo(); if(!c.Pinned&&!c.Snippet){deletion.Remember(c,DateTime.UtcNow);undoLink.Visible=true;undoTimer.Start();} db.Items.Remove(c); Changed(); NotifyAction(undoLink.Visible?"已删除 · 10 秒内可撤销":"已删除"); }
         void ClearHistory() {
             int count=db.Items.Count(x=>!x.Snippet&&!x.Pinned);
             if(count==0){SetStatus("没有可清空的普通历史");return;}
             if(MessageBox.Show(this,"清空全部 "+count+" 条普通历史？\n收藏、常用片段和系统剪贴板不受影响。此操作不可撤销。","清空历史",MessageBoxButtons.YesNo,MessageBoxIcon.Question,MessageBoxDefaultButton.Button2)!=DialogResult.Yes)return;
             var previous=db.Items.ToList();db.ClearHistory();
-            try{if(storageBlocked)throw new IOException("当前数据存储不可用。");store.Save(db);save.Stop();RefreshItems();SetStatus("已清空 "+count+" 条普通历史，收藏和片段已保留");}
+            try{if(storageBlocked)throw new IOException("当前数据存储不可用。");store.Save(db);save.Stop();ClearUndo();RefreshItems();SetStatus("已清空 "+count+" 条普通历史，收藏和片段已保留");}
             catch(Exception ex){db.Items=previous;RefreshItems();MessageBox.Show(this,"清空未完成，历史已保留。\n"+ex.Message,"winCopy",MessageBoxButtons.OK,MessageBoxIcon.Warning);}
         }
         void EditSnippet(Clip original) {

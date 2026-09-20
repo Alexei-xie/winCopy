@@ -85,10 +85,10 @@ namespace WinCopy {
             detail.RowStyles.Add(new RowStyle(SizeType.Absolute, 22)); detail.RowStyles.Add(new RowStyle(SizeType.Percent, 100)); detailTitle.Dock = DockStyle.Fill; detailTitle.ForeColor = Muted; detailTitle.AutoEllipsis = true; detailTitle.Font = new Font(Font.FontFamily, 9); detail.Controls.Add(detailTitle, 0, 0);
             var content = new Panel { Dock = DockStyle.Fill }; preview.Dock = DockStyle.Fill; preview.Multiline = true; preview.ReadOnly = true; preview.BorderStyle = BorderStyle.None; preview.BackColor = detail.BackColor; preview.ScrollBars = ScrollBars.Vertical; preview.Font = new Font(Font.FontFamily, 9); picture.Dock = DockStyle.Fill; picture.SizeMode = PictureBoxSizeMode.Zoom; picture.Cursor=Cursors.Hand; picture.AccessibleName="图片预览，点击放大"; tips.SetToolTip(picture,"点击放大查看图片"); picture.Click+=delegate{OpenImagePreview();}; content.Controls.Add(preview); content.Controls.Add(picture); detail.Controls.Add(content, 0, 1); layout.Controls.Add(detail, 0, 5);
             BuildActions(layout);
-            status.Dock = DockStyle.Fill; status.AutoEllipsis = true; status.Font = new Font(Font.FontFamily, 8); status.ForeColor = Muted; status.TextAlign = ContentAlignment.MiddleLeft; layout.Controls.Add(status, 0, 7);
+            status.Dock = DockStyle.Fill; status.AutoEllipsis = true; status.Font = new Font(Font.FontFamily, 8); status.ForeColor = Muted; status.TextAlign = ContentAlignment.MiddleLeft; SetupFeedback(layout);
             var context = new ContextMenuStrip(); context.Items.Add("复制", null, delegate { UseSelected(false, true); }); context.Items.Add("以纯文本粘贴", null, delegate { UseSelected(true, false); }); context.Items.Add("收藏 / 取消收藏", null, delegate { TogglePin(); }); context.Items.Add("编辑 / 保存为片段", null, delegate { if (Selected != null) EditSnippet(Selected); }); context.Items.Add("删除", null, delegate { DeleteSelected(); }); TrackMenu(context); list.ContextMenuStrip = context;
             list.MouseDown += delegate(object s, MouseEventArgs e) { if (e.Button == MouseButtons.Right) { int index = list.IndexFromPoint(e.Location); if (index >= 0) list.SelectedIndex = index; } };
         }
-        void TogglePin() { var c = Selected; if (c != null) { c.Pinned = !c.Pinned; Changed(); } }
+        void TogglePin() { var c = Selected; if (c != null) { c.Pinned = !c.Pinned; Changed(); NotifyAction(c.Pinned?"已收藏":"已取消收藏"); } }
     }
 }

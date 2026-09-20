@@ -19,15 +19,20 @@ namespace WinCopy {
             Design.Surface(e.Graphics,card,selected?Color.FromArgb(239,238,255):Color.White,11,selected?Color.FromArgb(215,212,248):Color.Empty);
             Design.Surface(e.Graphics,new Rectangle(r.X+12,r.Y+15,34,34),selected?Color.FromArgb(225,222,252):Design.Canvas,9,Color.Empty);
             string icon=c.Pinned?"★":c.Kind=="图片"?"▧":c.Kind=="文件"?"▤":"T";
-            TextRenderer.DrawText(e.Graphics,icon,Font,new Rectangle(r.X+12,r.Y+15,34,34),Accent,TextFormatFlags.HorizontalCenter|TextFormatFlags.VerticalCenter);
-            TextRenderer.DrawText(e.Graphics,c.Preview.Replace("\r"," ").Replace("\n","  ").Replace("\t"," "),Font,new Rectangle(r.X+58,r.Y+10,r.Width-88,24),Ink,TextFormatFlags.EndEllipsis|TextFormatFlags.SingleLine|TextFormatFlags.NoPrefix);
-            using(var small=new Font(Font.FontFamily,8.5f))TextRenderer.DrawText(e.Graphics,(c.Snippet?c.Group:c.Kind)+"  ·  "+c.Created.ToString("HH:mm")+(String.IsNullOrEmpty(c.Source)?"":"  ·  "+c.Source),small,new Rectangle(r.X+58,r.Y+37,r.Width-85,20),Muted,TextFormatFlags.EndEllipsis|TextFormatFlags.SingleLine|TextFormatFlags.NoPrefix);
+            var thumb=c.Image==null?null:thumbnails.Get(c);
+            if(thumb!=null){e.Graphics.DrawImage(thumb,new Rectangle(r.X+10,r.Y+12,40,40));if(c.Pinned)TextRenderer.DrawText(e.Graphics,"★",Font,new Rectangle(r.X+35,r.Y+8,18,20),Accent);}
+            else TextRenderer.DrawText(e.Graphics,icon,Font,new Rectangle(r.X+12,r.Y+15,34,34),Accent,TextFormatFlags.HorizontalCenter|TextFormatFlags.VerticalCenter);
+            var query=search.Text.Trim();var titleText=c.Preview;
+            if(query.Length>0&&titleText.IndexOf(query,StringComparison.OrdinalIgnoreCase)<0&&(c.Text??"").IndexOf(query,StringComparison.OrdinalIgnoreCase)>=0)titleText=c.Text;
+            SearchPresentation.Draw(e.Graphics,SearchPresentation.Excerpt(titleText,query),query,Font,new Rectangle(r.X+58,r.Y+10,r.Width-88,24),Ink);
+            using(var small=new Font(Font.FontFamily,8.5f))SearchPresentation.Draw(e.Graphics,SearchPresentation.Excerpt((c.Snippet?c.Group:c.Kind)+"  ·  "+c.Created.ToString("HH:mm")+(String.IsNullOrEmpty(c.Source)?"":"  ·  "+c.Source),query),query,small,new Rectangle(r.X+58,r.Y+37,r.Width-85,20),Muted);
             if(selected)TextRenderer.DrawText(e.Graphics,"↵",Font,new Rectangle(r.Right-28,r.Y+18,20,25),Accent,TextFormatFlags.VerticalCenter);
         }
         void BuildActions(TableLayoutPanel layout) {
             var footer=new TableLayoutPanel {Dock=DockStyle.Fill,ColumnCount=5,Margin=new Padding(0,6,0,0)};
             footer.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,86));footer.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,68));footer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));footer.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,76));footer.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,112));
             var add=CompactButton("＋ 片段",delegate{EditSnippet(null);},80);var pin=CompactButton("收藏",TogglePin,62);var copy=CompactButton("复制",delegate{UseSelected(false,true);},70);var paste=CompactButton("粘贴  ↵",delegate{UseSelected(false,false);},112);
+            pinAction=pin;
             paste.BackColor=Accent;paste.ForeColor=Color.White;
             footer.Controls.Add(add,0,0);footer.Controls.Add(pin,1,0);footer.Controls.Add(copy,3,0);footer.Controls.Add(paste,4,0);
             tips.SetToolTip(add,"把常用文字保存为片段");tips.SetToolTip(pin,"收藏或取消收藏当前记录");tips.SetToolTip(copy,"只复制，不切换窗口 · Ctrl + Enter");tips.SetToolTip(paste,"粘贴到之前的应用 · Enter");layout.Controls.Add(footer,0,6);

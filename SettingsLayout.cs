@@ -20,7 +20,7 @@ namespace WinCopy {
             using(var run=Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run")) startup.Checked=run!=null&&run.GetValue("winCopy")!=null;
             flow.Controls.Add(new Label {Text="不记录以下应用（进程名，用英文逗号分隔）",AutoSize=true,Margin=new Padding(0,14,0,6)}); excluded.Text=db.ExcludedApps; var exclusionFrame=Design.Input(excluded); exclusionFrame.Tag="input"; exclusionFrame.Dock=DockStyle.None; flow.Controls.Add(exclusionFrame);
             flow.Controls.Add(new Label {Text="历史使用当前 Windows 账户加密。检查更新仅连接 GitHub。\n应用排除按复制时前台窗口识别；无法识别所有密码内容。",AutoSize=true,ForeColor=Color.DimGray,Margin=new Padding(0,12,0,14)});
-            AddStorageSettings(flow);
+            AddStorageSettings(flow,db);
             // Actions are outside the scrollable content and use preferred heights, including DPI scaling.
             var footer=new TableLayoutPanel {Dock=DockStyle.Fill,AutoSize=true,ColumnCount=1,RowCount=2,Margin=Padding.Empty,Padding=new Padding(0,12,0,0)};
             footer.RowStyles.Add(new RowStyle(SizeType.AutoSize)); footer.RowStyles.Add(new RowStyle(SizeType.AutoSize)); root.Controls.Add(footer,0,1);
