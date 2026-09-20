@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -8,7 +8,7 @@ class SnippetLayout {
     static System.Collections.Generic.IEnumerable<Control> All(Control c) {foreach(Control x in c.Controls){yield return x;foreach(var y in All(x))yield return y;}}
     static void Check(Form f) {
         Application.DoEvents();
-        var buttons=All(f).OfType<Button>().ToList();
+        var buttons=All(f).OfType<Button>().Where(x=>x.Text=="保存"||x.Text=="取消").ToList();
         if(buttons.Count!=2)throw new Exception("Missing buttons");
         foreach(var b in buttons){if(b.Height<b.GetPreferredSize(Size.Empty).Height)throw new Exception("Button text clipped"); for(Control p=b.Parent;p!=null;p=p.Parent){if(!p.ClientRectangle.Contains(p.RectangleToClient(b.RectangleToScreen(b.ClientRectangle))))throw new Exception("Button clipped by "+p.GetType().Name);}}
         var body=All(f).OfType<TextBox>().First(x=>x.Multiline); if(body.Height<80)throw new Exception("Content field too small");

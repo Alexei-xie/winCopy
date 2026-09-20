@@ -18,7 +18,7 @@ namespace WinCopy {
             if (args.Contains("--self-test")) { Environment.Exit(SelfTest.Run()); return; }
             bool created;
             using (var mutex = new Mutex(true, "Local\\winCopy.Desktop", out created)) {
-                if (!created) { MessageBox.Show("winCopy 已在运行。请点击系统托盘图标打开。", "winCopy"); return; }
+                if (!created) { MacMessage.Show("winCopy 已在运行。请点击系统托盘图标打开。", "winCopy"); return; }
                 Native.SetProcessDPIAware(); Application.EnableVisualStyles(); Application.SetCompatibleTextRenderingDefault(false);
                 Application.Run(new MainWindow(args.Contains("--background"), true));
             }
@@ -47,7 +47,7 @@ namespace WinCopy {
             startupHidden = background;
             try { store = new StorageLocation(StorageLocation.DefaultDirectory).Resolve(); db = store.Load(); } catch (Exception ex) {
                 db = new Database(); storageBlocked = true;
-                MessageBox.Show("无法读取本地数据，原文件已保留。本次运行不会覆盖它。\n" + ex.Message, "winCopy", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MacMessage.Show("无法读取本地数据，原文件已保留。本次运行不会覆盖它。\n" + ex.Message, "winCopy", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
             Text = "winCopy · 剪贴板工作台"; Size = new Size(1120, 730); MinimumSize = new Size(960, 600);
             StartPosition = FormStartPosition.CenterScreen; Font = new Font("Microsoft YaHei UI", 10); BackColor = Color.FromArgb(246, 248, 252); ForeColor = Ink; Icon = MakeIcon();
@@ -101,7 +101,7 @@ namespace WinCopy {
         void SaveNow() { if (storageBlocked) return; try { store.Save(db); } catch (Exception ex) { SetStatus("保存失败：" + ex.Message); } }
         protected override void OnHandleCreated(EventArgs e) {
             base.OnHandleCreated(e); if (!Native.AddClipboardFormatListener(Handle)) SetStatus("无法注册剪贴板监听");
-            if (!RegisterShortcut(db.Hotkey)) BeginInvoke((Action)delegate { MessageBox.Show("Ctrl + Alt + " + db.Hotkey + " 已被其他应用占用，请在设置中更改。", "winCopy"); });
+            if (!RegisterShortcut(db.Hotkey)) BeginInvoke((Action)delegate { MacMessage.Show("Ctrl + Alt + " + db.Hotkey + " 已被其他应用占用，请在设置中更改。", "winCopy"); });
         }
         protected override void OnHandleDestroyed(EventArgs e) { Native.RemoveClipboardFormatListener(Handle); Native.UnregisterHotKey(Handle, 1); base.OnHandleDestroyed(e); }
         bool RegisterShortcut(string key) { return Native.RegisterHotKey(Handle, 1, 0x4003, (uint)key.ToUpperInvariant()[0]); }
@@ -140,7 +140,7 @@ namespace WinCopy {
                 var data = new DataObject();
                 if (c.Image != null && !plain) { using (var ms = new MemoryStream(c.Image)) using (var image = Image.FromStream(ms)) using (var bitmap = new Bitmap(image)) { data.SetData(DataFormats.Bitmap, bitmap); Clipboard.SetDataObject(data, true, 5, 50); } }
                 else {
-                    if (c.Files != null && !plain) { if (c.Files.Any(x => !File.Exists(x) && !Directory.Exists(x))) { MessageBox.Show("部分文件已移动或删除，请检查文件路径。", "winCopy"); return; } var files = new StringCollection(); files.AddRange(c.Files); data.SetFileDropList(files); }
+                    if (c.Files != null && !plain) { if (c.Files.Any(x => !File.Exists(x) && !Directory.Exists(x))) { MacMessage.Show("部分文件已移动或删除，请检查文件路径。", "winCopy"); return; } var files = new StringCollection(); files.AddRange(c.Files); data.SetFileDropList(files); }
                     else { data.SetText(c.Text, TextDataFormat.UnicodeText); if (!plain) { if (c.Html.Length > 0) data.SetData(DataFormats.Html, c.Html); if (c.Rtf.Length > 0) data.SetData(DataFormats.Rtf, c.Rtf); } }
                     Clipboard.SetDataObject(data, true, 5, 50);
                 }
@@ -155,7 +155,7 @@ namespace WinCopy {
                     timer.Stop(); timer.Dispose();
                     if (Native.ModifiersDown() || Native.GetForegroundWindow() != destination || !Native.Paste()) tray.ShowBalloonTip(2500, "winCopy", "内容已复制。请在目标应用中按 Ctrl + V。", ToolTipIcon.Info);
                 }; timer.Start();
-            } catch (Exception ex) { MessageBox.Show("复制失败，请稍后重试。\n" + ex.Message, "winCopy"); }
+            } catch (Exception ex) { MacMessage.Show("复制失败，请稍后重试。\n" + ex.Message, "winCopy"); }
         }
         void HandleKeys(object sender, KeyEventArgs e) {
             if (e.KeyCode == Keys.Escape) { Hide(); e.Handled = true; }
@@ -164,14 +164,14 @@ namespace WinCopy {
             else if (e.KeyCode == Keys.Down && search.Focused && list.Items.Count > 0) { list.Focus(); e.SuppressKeyPress = true; }
             else if (e.KeyCode == Keys.Delete && list.Focused) { DeleteSelected(); e.SuppressKeyPress = true; }
         }
-        void DeleteSelected() { var c = Selected; if (c == null) return; if ((c.Pinned || c.Snippet) && MessageBox.Show("删除此收藏或片段？", "winCopy", MessageBoxButtons.YesNo) != DialogResult.Yes) return; db.Items.Remove(c); Changed(); }
+        void DeleteSelected() { var c = Selected; if (c == null) return; if ((c.Pinned || c.Snippet) && MacMessage.Show("删除此收藏或片段？", "winCopy", MessageBoxButtons.YesNo) != DialogResult.Yes) return; db.Items.Remove(c); Changed(); }
         void ClearHistory() {
             int count=db.Items.Count(x=>!x.Snippet&&!x.Pinned);
             if(count==0){SetStatus("没有可清空的普通历史");return;}
-            if(MessageBox.Show(this,"清空全部 "+count+" 条普通历史？\n收藏、常用片段和系统剪贴板不受影响。此操作不可撤销。","清空历史",MessageBoxButtons.YesNo,MessageBoxIcon.Question,MessageBoxDefaultButton.Button2)!=DialogResult.Yes)return;
+            if(MacMessage.Show(this,"清空全部 "+count+" 条普通历史？\n收藏、常用片段和系统剪贴板不受影响。此操作不可撤销。","清空历史",MessageBoxButtons.YesNo,MessageBoxIcon.Question,MessageBoxDefaultButton.Button2)!=DialogResult.Yes)return;
             var previous=db.Items.ToList();db.ClearHistory();
             try{if(storageBlocked)throw new IOException("当前数据存储不可用。");store.Save(db);save.Stop();RefreshItems();SetStatus("已清空 "+count+" 条普通历史，收藏和片段已保留");}
-            catch(Exception ex){db.Items=previous;RefreshItems();MessageBox.Show(this,"清空未完成，历史已保留。\n"+ex.Message,"winCopy",MessageBoxButtons.OK,MessageBoxIcon.Warning);}
+            catch(Exception ex){db.Items=previous;RefreshItems();MacMessage.Show(this,"清空未完成，历史已保留。\n"+ex.Message,"winCopy",MessageBoxButtons.OK,MessageBoxIcon.Warning);}
         }
         void EditSnippet(Clip original) {
             if (original != null && original.Kind != "文本") { SetStatus("只有文本可以保存为片段"); return; }
@@ -184,7 +184,7 @@ namespace WinCopy {
             using (var f = new SettingsDialog(db)) {
                 f.StorageDirectory = store.DirectoryPath; f.UpdateAction = delegate { ShowUpdate(f); }; f.ExportAction = ExportSnippets; f.ImportAction = ImportSnippets;
                 if (f.ShowDialog(this) != DialogResult.OK) return;
-                if (f.Shortcut != db.Hotkey) { Native.UnregisterHotKey(Handle, 1); if (!RegisterShortcut(f.Shortcut)) { RegisterShortcut(db.Hotkey); MessageBox.Show("快捷键被占用，设置未保存。", "winCopy"); return; } }
+                if (f.Shortcut != db.Hotkey) { Native.UnregisterHotKey(Handle, 1); if (!RegisterShortcut(f.Shortcut)) { RegisterShortcut(db.Hotkey); MacMessage.Show("快捷键被占用，设置未保存。", "winCopy"); return; } }
                 try {
                     if(!StorageLocation.Same(f.StorageDirectory,store.DirectoryPath)) {
                         if(storageBlocked)throw new IOException("当前数据读取失败，不能迁移。请先恢复原数据目录再重试。");
@@ -193,16 +193,16 @@ namespace WinCopy {
                     }
                 } catch(Exception ex) {
                     if(f.Shortcut!=db.Hotkey){Native.UnregisterHotKey(Handle,1);RegisterShortcut(db.Hotkey);}
-                    MessageBox.Show(this,"存储位置未更改，设置未保存。\n"+ex.Message,"winCopy",MessageBoxButtons.OK,MessageBoxIcon.Warning);return;
+                    MacMessage.Show(this,"存储位置未更改，设置未保存。\n"+ex.Message,"winCopy",MessageBoxButtons.OK,MessageBoxIcon.Warning);return;
                 }
                 db.Hotkey = f.Shortcut; db.Limit = f.HistoryLimit; db.RetentionDays = f.Days; db.AutoPaste = f.AutoPaste; db.CaptureImages = f.Images; db.RememberHistory = f.Remember; db.ExcludedApps = f.Excluded;
-                try { using (var key = Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run", true)) { if (f.Startup) key.SetValue("winCopy", "\"" + Application.ExecutablePath + "\" --background"); else key.DeleteValue("winCopy", false); } } catch (Exception ex) { MessageBox.Show("无法修改开机启动：" + ex.Message, "winCopy"); }
+                try { using (var key = Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run", true)) { if (f.Startup) key.SetValue("winCopy", "\"" + Application.ExecutablePath + "\" --background"); else key.DeleteValue("winCopy", false); } } catch (Exception ex) { MacMessage.Show("无法修改开机启动：" + ex.Message, "winCopy"); }
                 tray.Text = "winCopy · Ctrl + Alt + " + db.Hotkey; Changed(); SaveNow();
             }
         }
         void ExportSnippets() {
             using (var dialog = new SaveFileDialog { Filter = "片段 XML|*.xml", FileName = "winCopy-snippets.xml" }) if (dialog.ShowDialog(this) == DialogResult.OK) {
-                try { var root = new XElement("folders", db.Items.Where(x => x.Snippet).GroupBy(x => x.Group).Select(g => new XElement("folder", new XElement("title", g.Key), new XElement("snippets", g.Select(c => new XElement("snippet", new XElement("title", c.Title), new XElement("content", c.Text))))))); new XDocument(root).Save(dialog.FileName); MessageBox.Show("片段已导出为明文 XML，请妥善保管。", "winCopy"); } catch (Exception ex) { MessageBox.Show(ex.Message, "导出失败"); }
+                try { var root = new XElement("folders", db.Items.Where(x => x.Snippet).GroupBy(x => x.Group).Select(g => new XElement("folder", new XElement("title", g.Key), new XElement("snippets", g.Select(c => new XElement("snippet", new XElement("title", c.Title), new XElement("content", c.Text))))))); new XDocument(root).Save(dialog.FileName); MacMessage.Show("片段已导出为明文 XML，请妥善保管。", "winCopy"); } catch (Exception ex) { MacMessage.Show(ex.Message, "导出失败"); }
             }
         }
         void ImportSnippets() {
@@ -216,8 +216,8 @@ namespace WinCopy {
                         }
                     }
                     int added = 0; foreach (var c in incoming) if (!db.Items.Any(x => x.Snippet && x.Title == c.Title && x.Group == c.Group && x.Text == c.Text)) { db.Items.Add(c); added++; }
-                    Changed(); MessageBox.Show("已导入 " + added + " 个片段。", "winCopy");
-                } catch (Exception ex) { MessageBox.Show("无法导入：" + ex.Message, "winCopy"); }
+                    Changed(); MacMessage.Show("已导入 " + added + " 个片段。", "winCopy");
+                } catch (Exception ex) { MacMessage.Show("无法导入：" + ex.Message, "winCopy"); }
             }
         }
     }

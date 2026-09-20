@@ -32,7 +32,7 @@ namespace WinCopy {
     }
     public class Database {
         public List<Clip> Items = new List<Clip>();
-        public List<string> GroupOrder = new List<string>(); public bool PopupPositionSet; public int PopupX, PopupY;
+        public List<string> GroupOrder = new List<string>(); public bool PopupPositionSet; public int PopupX, PopupY; public bool MenuPositionSet; public int MenuX, MenuY;
         public int Limit = 200;
         public int RetentionDays = 30;
         public bool AutoPaste = true;
@@ -88,7 +88,7 @@ namespace WinCopy {
             Directory.CreateDirectory(DirectoryPath);
             byte[] clear;
             using (var ms = new MemoryStream()) {
-                var persisted = new Database { Items = db.Items.Where(x => db.RememberHistory || x.Pinned || x.Snippet).ToList(), GroupOrder = db.GroupOrder, PopupPositionSet = db.PopupPositionSet, PopupX = db.PopupX, PopupY = db.PopupY, Limit = db.Limit, RetentionDays = db.RetentionDays, AutoPaste = db.AutoPaste, CaptureImages = db.CaptureImages, Hotkey = db.Hotkey, ExcludedApps = db.ExcludedApps, RememberHistory = db.RememberHistory };
+                var persisted = new Database { Items = db.Items.Where(x => db.RememberHistory || x.Pinned || x.Snippet).ToList(), GroupOrder = db.GroupOrder, PopupPositionSet = db.PopupPositionSet, PopupX = db.PopupX, PopupY = db.PopupY, MenuPositionSet = db.MenuPositionSet, MenuX = db.MenuX, MenuY = db.MenuY, Limit = db.Limit, RetentionDays = db.RetentionDays, AutoPaste = db.AutoPaste, CaptureImages = db.CaptureImages, Hotkey = db.Hotkey, ExcludedApps = db.ExcludedApps, RememberHistory = db.RememberHistory };
                 Serializer.Serialize(ms, persisted); clear = ms.ToArray();
             }
             var temp = FilePath + ".tmp";

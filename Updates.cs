@@ -78,6 +78,7 @@ namespace WinCopy {
             retry.Text="重新检查";retry.AutoSize=true;retry.MinimumSize=new Size(105,38);retry.BackColor=Color.White;retry.Click+=async delegate{await CheckAsync();};actions.Controls.Add(retry);
             var page=new RoundedButton {Text="发布页",AutoSize=true,MinimumSize=new Size(90,38),BackColor=Color.White};page.Click+=delegate{OpenUrl(UpdateService.ReleasesUrl);};actions.Controls.Add(page);grid.Controls.Add(actions,0,3);
             grid.Controls.Add(new Label {Text="仅查询公开版本信息，不会上传剪贴板内容。",ForeColor=Design.Muted,AutoSize=true,Margin=new Padding(0,12,0,0)},0,4);
+            MacChrome.Attach(this);
             Shown+=async delegate{await CheckAsync();};FormClosing+=delegate{cancellation.Cancel();};
         }
         async Task CheckAsync() {
@@ -94,7 +95,7 @@ namespace WinCopy {
             }catch(Exception ex){if(!IsDisposed&&!cancellation.IsCancellationRequested){heading.Text="暂时无法完成检查";notes.Text=UpdateService.ErrorMessage(ex);}}
             finally{checking=false;if(!IsDisposed)retry.Enabled=true;}
         }
-        void OpenUrl(string url) {if(String.IsNullOrEmpty(url))return;try{Process.Start(new ProcessStartInfo(url){UseShellExecute=true});}catch{MessageBox.Show(this,"无法打开浏览器，请访问 github.com/Alexei-xie/winCopy/releases。","winCopy");}}
+        void OpenUrl(string url) {if(String.IsNullOrEmpty(url))return;try{Process.Start(new ProcessStartInfo(url){UseShellExecute=true});}catch{MacMessage.Show(this,"无法打开浏览器，请访问 github.com/Alexei-xie/winCopy/releases。","winCopy");}}
     }
     public partial class MainWindow {
         UpdateDialog updateDialog;

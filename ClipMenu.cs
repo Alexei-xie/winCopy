@@ -32,8 +32,17 @@ namespace WinCopy {
         public ClipMenu Folder(string text) {
             var row=Row(text,null); var child=new ClipMenu(); row.DropDown=child; return child;
         }
+        public event Action<Point> PositionMoved;
+        public void AddTitleBar() {
+            var title=new MacTitleBar("winCopy",delegate{Close();}) {Size=new Size(270,48),Font=Font};
+            title.ReadPosition=()=>Location;title.MoveWindow=p=>Location=p;
+            title.DragStarted=delegate{AutoClose=false;foreach(var row in Items.OfType<ToolStripMenuItem>())row.HideDropDown();};
+            title.DragEnded=delegate{Location=MacChrome.Clamp(Location,Size);AutoClose=true;if(PositionMoved!=null)PositionMoved(Location);};
+            var host=new ToolStripControlHost(title) {AutoSize=false,Size=title.Size,Margin=Padding.Empty,Padding=Padding.Empty};
+            Items.Insert(0,host);
+        }
         public static ClipMenu Build(Database db, Action<Clip> choose) {
-            var menu=new ClipMenu(); menu.Heading("历史");
+            var menu=new ClipMenu(); menu.AddTitleBar(); menu.Heading("历史");
             var history=db.Items.Where(x=>!x.Snippet).OrderByDescending(x=>x.Created).ToList();
             if(history.Count==0)menu.Heading("暂无历史");
             for(int start=0;start<history.Count;start+=10) {
@@ -120,7 +129,8 @@ namespace WinCopy {
             quickMenu.Row("检查更新…",delegate{RunMenuAction(delegate{ShowUpdate();});});
             quickMenu.Items.Add(new ToolStripSeparator());
             quickMenu.Row("退出 winCopy",delegate{RunMenuAction(delegate{quitting=true;Close();});});
-            quickMenu.Show(Cursor.Position);
+            quickMenu.PositionMoved+=delegate(Point p){db.MenuPositionSet=true;db.MenuX=p.X;db.MenuY=p.Y;save.Stop();save.Start();};
+            quickMenu.Show(db.MenuPositionSet?MacChrome.Clamp(new Point(db.MenuX,db.MenuY),quickMenu.GetPreferredSize(Size.Empty)):Cursor.Position);
             Native.SetForegroundWindow(quickMenu.Handle);
         }
         void RunMenuAction(Action action) {

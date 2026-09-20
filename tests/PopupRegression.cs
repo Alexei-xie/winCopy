@@ -17,7 +17,7 @@ class PopupRegression {
     static void CheckButtons(Form f) {
         foreach(var input in Desc(f).Where(x => x is NumericUpDown || x is ComboBox)) Check(input.Parent.Height >= input.Bottom, "Settings input clipped");
         var buttons=Desc(f).OfType<Button>().Where(x=>x.Text.Contains("XML")||x.Text=="取消"||x.Text=="保存设置").ToList(); Check(buttons.Count==4,"Missing footer actions");
-        foreach(var b in buttons) {var r=f.RectangleToClient(b.RectangleToScreen(b.ClientRectangle)); Check(f.ClientRectangle.Contains(r),"Button outside settings: "+b.Text); Check(b.Height>=32,"Button height too small"); var p=b.Parent; while(p!=null&&p!=f) {Check(p.ClientRectangle.Contains(p.RectangleToClient(b.RectangleToScreen(b.ClientRectangle))),"Button clipped by parent: "+b.Text);p=p.Parent;} }
+        foreach(var b in buttons) {var r=f.RectangleToClient(b.RectangleToScreen(b.ClientRectangle)); Check(f.ClientRectangle.Contains(r),"Button outside settings: "+b.Text+" "+r+" client="+f.ClientRectangle); Check(b.Height>=32,"Button height too small"); var p=b.Parent; while(p!=null&&p!=f) {Check(p.ClientRectangle.Contains(p.RectangleToClient(b.RectangleToScreen(b.ClientRectangle))),"Button clipped by parent: "+b.Text);p=p.Parent;} }
     }
     [STAThread] static int Main() {
         Application.EnableVisualStyles(); MainWindow main=null; SettingsDialog settings=null; Point cursor=Cursor.Position;
@@ -37,7 +37,7 @@ class PopupRegression {
             Invoke(main,"RefreshItems");
             Invoke(strip,"OnMouseDown",new MouseEventArgs(MouseButtons.Left,1,all+8,15,0)); Invoke(strip,"OnMouseUp",new MouseEventArgs(MouseButtons.Left,1,all+8,15,0));
             Check(((ListBox)Field(main,"list")).Items.Count==1&&((Clip)((ListBox)Field(main,"list")).Items[0]).Group=="工作","Group filter failed"); results.Add("PASS: expanded group selection filters snippets");
-            var label=Desc(main).OfType<Label>().First(x=>x.Text=="winCopy");
+            var label=Desc(main).OfType<MacTitleBar>().First();
             Invoke(label,"OnMouseDown",new MouseEventArgs(MouseButtons.Left,1,10,10,0)); Cursor.Position=new Point(cursor.X+25,cursor.Y+20); Invoke(label,"OnMouseMove",new MouseEventArgs(MouseButtons.Left,0,35,30,0)); Invoke(label,"OnMouseUp",new MouseEventArgs(MouseButtons.Left,1,35,30,0));
             Check(db.PopupPositionSet,"Popup drag position not saved"); Point saved=main.Location; Invoke(main,"PositionPopup"); Check(main.Location==saved,"Popup position reset on reopen"); results.Add("PASS: title drag and retained popup position");
             string path=Path.Combine(Path.GetTempPath(),"winCopy-layout-"+Guid.NewGuid().ToString("N")); try {var store=new Store(path);store.Save(db);var restored=store.Load();Check(restored.GroupOrder.SequenceEqual(db.GroupOrder)&&restored.PopupPositionSet&&restored.PopupX==db.PopupX,"Layout persistence failed");} finally {if(Directory.Exists(path))Directory.Delete(path,true);} results.Add("PASS: encrypted roundtrip preserves group order and position");

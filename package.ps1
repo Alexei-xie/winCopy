@@ -29,6 +29,12 @@ if ($LASTEXITCODE -ne 0) { throw 'Numeric regression tests failed.' }
 if ($LASTEXITCODE -ne 0) { throw 'Menu test compilation failed.' }
 & (Join-Path $dist 'MenuRegression.exe')
 if ($LASTEXITCODE -ne 0) { throw 'Menu regression tests failed.' }
+foreach ($testName in @('MacRegression','SnippetLayout')) {
+    & $compiler /nologo /target:exe /codepage:65001 "/out:$dist\$testName.exe" "/reference:$dist\winCopy.exe" /reference:System.Core.dll /reference:System.Drawing.dll /reference:System.Windows.Forms.dll (Join-Path $PSScriptRoot "tests\$testName.cs")
+    if ($LASTEXITCODE -ne 0) { throw "$testName compilation failed." }
+    & (Join-Path $dist "$testName.exe")
+    if ($LASTEXITCODE -ne 0) { throw "$testName regression failed." }
+}
 if (-not $IsccPath) {
     $IsccPath = @("${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe", "$env:ProgramFiles\Inno Setup 6\ISCC.exe") | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
 }
