@@ -31,7 +31,12 @@ namespace WinCopy {
                     foreach(int index in new[]{1,3})grid.RowStyles[index].Height=Math.Min(grid.RowStyles[index].Height,Font.Height+34);
                 } finally {grid.ResumeLayout(true);fitting=false;}
             };
-            body.SizeChanged+=delegate{fit();};Shown+=delegate{fit();};
+            bool fitPending=false;
+            Action scheduleFit=delegate {
+                if(fitPending||!IsHandleCreated||IsDisposed)return;fitPending=true;
+                BeginInvoke((Action)delegate{fitPending=false;if(!IsDisposed)fit();});
+            };
+            body.SizeChanged+=delegate{scheduleFit();};Shown+=delegate{scheduleFit();};
         }
     }
     public partial class SettingsDialog : Form {
