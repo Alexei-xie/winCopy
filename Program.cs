@@ -84,7 +84,7 @@ namespace WinCopy {
             var items = db.Items.Where(x => view == "常用片段" ? x.Snippet : view == "收藏" ? x.Pinned : !x.Snippet && (view == "全部历史" || x.Kind == view));
             if (view == "常用片段" && (string)groups.SelectedItem != "所有分组") items = items.Where(x => x.Group == (string)groups.SelectedItem);
             if (q.Length > 0) items = items.Where(x => (x.Preview + " " + x.Text + " " + x.Source + " " + (x.Snippet ? x.Group : "")).IndexOf(q, StringComparison.OrdinalIgnoreCase) >= 0);
-            list.BeginUpdate(); list.Items.Clear(); foreach (var c in items.OrderByDescending(x => x.Pinned).ThenByDescending(x => x.Created)) list.Items.Add(c); list.EndUpdate();
+            list.BeginUpdate(); list.Items.Clear(); foreach (var c in view=="常用片段"?db.OrderedSnippets().Where(new HashSet<Clip>(items).Contains):items.OrderByDescending(x => x.Pinned).ThenByDescending(x => x.Created)) list.Items.Add(c); list.EndUpdate();
             foreach (var b in nav) { b.BackColor = b.Text == view ? Accent : Color.FromArgb(247, 248, 250); b.ForeColor = b.Text == view ? Color.White : Ink; }
             loading = false;
             emptyState.Visible = list.Items.Count == 0; emptyState.Text = search.Text.Length > 0 ? "\u6ca1\u6709\u5339\u914d\u7684\u5185\u5bb9" : "\u590d\u5236\u6587\u5b57\u3001\u56fe\u7247\u6216\u6587\u4ef6\u5373\u53ef\u5f00\u59cb"; if (emptyState.Visible) emptyState.BringToFront(); int index = list.Items.Cast<Clip>().ToList().FindIndex(x => x.Id == selectedId); list.SelectedIndex = index >= 0 ? index : list.Items.Count > 0 ? 0 : -1; ShowDetail();
@@ -187,6 +187,7 @@ namespace WinCopy {
         }
         void Settings() {
             using (var f = new SettingsDialog(db)) {
+                f.BackupAction=delegate{BackupData(f);};f.RestoreAction=delegate{RestoreData(f);};f.CleanupAction=delegate{CleanupData(f);};f.ManageAction=delegate{ManageSnippets(f);};
                 f.StorageDirectory = store.DirectoryPath; f.UpdateAction = delegate { ShowUpdate(f); }; f.ExportAction = ExportSnippets; f.ImportAction = ImportSnippets;
                 if (f.ShowDialog(this) != DialogResult.OK) return;
                 if (f.Shortcut != db.Hotkey) { Native.UnregisterHotKey(Handle, 1); if (!RegisterShortcut(f.Shortcut)) { RegisterShortcut(db.Hotkey); MessageBox.Show("快捷键被占用，设置未保存。", "winCopy"); return; } }
@@ -207,7 +208,7 @@ namespace WinCopy {
         }
         void ExportSnippets() {
             using (var dialog = new SaveFileDialog { Filter = "片段 XML|*.xml", FileName = "winCopy-snippets.xml" }) if (dialog.ShowDialog(this) == DialogResult.OK) {
-                try { var root = new XElement("folders", db.Items.Where(x => x.Snippet).GroupBy(x => x.Group).Select(g => new XElement("folder", new XElement("title", g.Key), new XElement("snippets", g.Select(c => new XElement("snippet", new XElement("title", c.Title), new XElement("content", c.Text))))))); new XDocument(root).Save(dialog.FileName); MessageBox.Show("片段已导出为明文 XML，请妥善保管。", "winCopy"); } catch (Exception ex) { MessageBox.Show(ex.Message, "导出失败"); }
+                try { var root = new XElement("folders", db.OrderedSnippets().GroupBy(x => x.Group).Select(g => new XElement("folder", new XElement("title", g.Key), new XElement("snippets", g.Select(c => new XElement("snippet", new XElement("title", c.Title), new XElement("content", c.Text))))))); new XDocument(root).Save(dialog.FileName); MessageBox.Show("片段已导出为明文 XML，请妥善保管。", "winCopy"); } catch (Exception ex) { MessageBox.Show(ex.Message, "导出失败"); }
             }
         }
         void ImportSnippets() {

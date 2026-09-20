@@ -15,8 +15,8 @@ class PopupRegression {
     static void Shot(Form form,string name) { using(var b=new Bitmap(form.Width,form.Height)) {form.DrawToBitmap(b,new Rectangle(Point.Empty,form.Size)); b.Save(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,name));} }
     static System.Collections.Generic.IEnumerable<Control> Desc(Control root) { foreach(Control c in root.Controls) {yield return c; foreach(var child in Desc(c)) yield return child;} }
     static void CheckButtons(Form f) {
-        foreach(var input in Desc(f).Where(x => x is NumericUpDown || x is ComboBox)) Check(input.Parent.Height >= input.Bottom, "Settings input clipped");
-        var buttons=Desc(f).OfType<Button>().Where(x=>x.Text.Contains("XML")||x.Text=="取消"||x.Text=="保存设置").ToList(); Check(buttons.Count==4,"Missing footer actions");
+        foreach(var input in Desc(f).Where(x => x.Visible && (x is NumericUpDown || x is ComboBox))) Check(input.Parent.Height >= input.Bottom, "Settings input clipped");
+        var buttons=Desc(f).OfType<Button>().Where(x=>x.Text=="取消"||x.Text=="保存设置").ToList(); Check(buttons.Count==2,"Missing footer actions");
         foreach(var b in buttons) {var r=f.RectangleToClient(b.RectangleToScreen(b.ClientRectangle)); Check(f.ClientRectangle.Contains(r),"Button outside settings: "+b.Text); Check(b.Height>=32,"Button height too small"); var p=b.Parent; while(p!=null&&p!=f) {Check(p.ClientRectangle.Contains(p.RectangleToClient(b.RectangleToScreen(b.ClientRectangle))),"Button clipped by parent: "+b.Text);p=p.Parent;} }
     }
     [STAThread] static int Main() {
@@ -43,7 +43,7 @@ class PopupRegression {
             string path=Path.Combine(Path.GetTempPath(),"winCopy-layout-"+Guid.NewGuid().ToString("N")); try {var store=new Store(path);store.Save(db);var restored=store.Load();Check(restored.GroupOrder.SequenceEqual(db.GroupOrder)&&restored.PopupPositionSet&&restored.PopupX==db.PopupX,"Layout persistence failed");} finally {if(Directory.Exists(path))Directory.Delete(path,true);} results.Add("PASS: encrypted roundtrip preserves group order and position");
             Shot(main,"groups-preview.png"); settings=new SettingsDialog(db); settings.Show(main);Application.DoEvents();CheckButtons(settings);Shot(settings,"settings-preview.png");
             settings.ClientSize=new Size(480,420);Application.DoEvents();CheckButtons(settings);Shot(settings,"settings-small-preview.png");
-            settings.Scale(new SizeF(1.5f,1.5f));Application.DoEvents();CheckButtons(settings);results.Add("PASS: all four footer actions visible at normal, small and 150% scaled layouts");
+            settings.Scale(new SizeF(1.5f,1.5f));Application.DoEvents();CheckButtons(settings);results.Add("PASS: both footer actions visible at normal, small and 150% scaled layouts");
             return 0;
         }catch(Exception ex){results.Add("FAIL: "+ex);return 1;}
         finally{Cursor.Position=cursor;if(settings!=null)settings.Dispose();if(main!=null){Set(main,"quitting",true);main.Close();main.Dispose();}File.WriteAllLines(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"popup-regression.txt"),results);}

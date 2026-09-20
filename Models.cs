@@ -32,6 +32,7 @@ namespace WinCopy {
     }
     public class Database {
         public List<Clip> Items = new List<Clip>();
+        public List<string> SnippetOrder = new List<string>();
         public List<string> GroupOrder = new List<string>(); public bool PopupPositionSet; public int PopupX, PopupY;
         public int Limit = 200;
         public int RetentionDays = 30;
@@ -51,7 +52,12 @@ namespace WinCopy {
             var available=Items.Where(x=>x.Snippet).Select(x=>x.Group).Distinct().ToList();
             return GroupOrder.Where(available.Contains).Concat(available.Where(x=>!GroupOrder.Contains(x)).OrderBy(x=>x)).Distinct().ToArray();
         }
+        public List<Clip> OrderedSnippets() {
+            var order=SnippetOrder.Select((id,index)=>new {id,index}).GroupBy(x=>x.id).ToDictionary(g=>g.Key,g=>g.First().index);
+            return GetGroups().SelectMany(group=>Items.Where(x=>x.Snippet&&x.Group==group).OrderBy(x=>order.ContainsKey(x.Id)?order[x.Id]:Int32.MaxValue).ThenByDescending(x=>x.Created)).ToList();
+        }
         public void RemoveEmptyGroups() {
+            var ids=new HashSet<string>(Items.Where(x=>x.Snippet).Select(x=>x.Id));SnippetOrder=SnippetOrder.Where(ids.Contains).Distinct().ToList();
             var available=Items.Where(x=>x.Snippet).Select(x=>x.Group).Distinct().ToList();
             GroupOrder=GroupOrder.Where(available.Contains).Distinct().ToList();
         }
@@ -88,7 +94,7 @@ namespace WinCopy {
             Directory.CreateDirectory(DirectoryPath);
             byte[] clear;
             using (var ms = new MemoryStream()) {
-                var persisted = new Database { Items = db.Items.Where(x => db.RememberHistory || x.Pinned || x.Snippet).ToList(), GroupOrder = db.GroupOrder, PopupPositionSet = db.PopupPositionSet, PopupX = db.PopupX, PopupY = db.PopupY, Limit = db.Limit, RetentionDays = db.RetentionDays, AutoPaste = db.AutoPaste, CaptureImages = db.CaptureImages, Hotkey = db.Hotkey, ExcludedApps = db.ExcludedApps, RememberHistory = db.RememberHistory };
+                var persisted = new Database { Items = db.Items.Where(x => db.RememberHistory || x.Pinned || x.Snippet).ToList(), GroupOrder = db.GroupOrder, SnippetOrder = db.SnippetOrder, PopupPositionSet = db.PopupPositionSet, PopupX = db.PopupX, PopupY = db.PopupY, Limit = db.Limit, RetentionDays = db.RetentionDays, AutoPaste = db.AutoPaste, CaptureImages = db.CaptureImages, Hotkey = db.Hotkey, ExcludedApps = db.ExcludedApps, RememberHistory = db.RememberHistory };
                 Serializer.Serialize(ms, persisted); clear = ms.ToArray();
             }
             var temp = FilePath + ".tmp";

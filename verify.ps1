@@ -25,7 +25,7 @@ try {
         $bitmap.Save((Join-Path (Join-Path $PSScriptRoot $OutputDirectory) 'settings-preview.png'))
         $bitmap.Dispose()
         $pathField = $settings.GetType().GetField('storagePath', [Reflection.BindingFlags]'Instance,NonPublic').GetValue($settings)
-        $scroll = $settings.Controls[0].Controls[0]
+        $settings.ShowSection("存储"); $scroll = $pathField.Parent; while (-not $scroll.AutoScroll) { $scroll = $scroll.Parent }
         $scroll.ScrollControlIntoView($pathField.Parent)
         [System.Windows.Forms.Application]::DoEvents()
         $bitmap = New-Object System.Drawing.Bitmap($settings.Width, $settings.Height)

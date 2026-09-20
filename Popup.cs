@@ -65,7 +65,7 @@ namespace WinCopy {
             BuildBrand(header);
             var more = CompactButton("···", delegate {}, 32); more.AccessibleName = "更多操作";
             var menu = new ContextMenuStrip();
-            menu.Items.Add("新建片段", null, delegate { EditSnippet(null); });
+            menu.Items.Add("新建片段", null, delegate { EditSnippet(null); }); menu.Items.Add("管理片段 / 分组",null,delegate{ManageSnippets();}); menu.Items.Add("按时间清理历史",null,delegate{CleanupData(this);});
             menu.Items.Add("偏好设置", null, delegate { Settings(); }); menu.Items.Add("检查更新", null, delegate { ShowUpdate(); });
             var pause = new ToolStripMenuItem("暂停记录"); pause.Click += delegate { paused = !paused; RefreshItems(); }; menu.Items.Add(pause);
             menu.Opening += delegate { pause.Checked = paused; };

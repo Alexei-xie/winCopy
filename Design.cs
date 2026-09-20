@@ -31,7 +31,7 @@ namespace WinCopy {
         static void Apply(Control c) {
             foreach(Control child in c.Controls) {
                 var b=child as RoundedButton;
-                if(b!=null){bool primary=b.Text=="保存"||b.Text=="保存设置";b.BackColor=primary?Accent:Color.White;b.ForeColor=primary?Color.White:Ink;}
+                if(b!=null){bool primary=b.Text=="保存"||b.Text=="保存设置"||b.Text=="保存更改"||b.Text=="继续";b.BackColor=primary?Accent:Color.White;b.ForeColor=primary?Color.White:Ink;}
                 if(child is Label)child.ForeColor=child.Font.Size>=16?Ink:Muted;
                 if(child is CheckBox)child.ForeColor=Ink;
                 Apply(child);

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -33,8 +33,8 @@ class UsabilityRegression {
         list.SelectedItem=photo;Call(main,"TogglePin");Check(photo.Pinned&&((Button)Field(main,"pinAction")).Text=="已收藏","Favorite state feedback");
         ((TextBox)Field(main,"search")).Text="demo";Application.DoEvents();Check(list.Items.Count==3,"Source and deep text search");Shot(main,"usability-preview.png");
         using(var settings=new SettingsDialog(data)){
-            settings.StorageDirectory=Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"missing-usage-folder");settings.Show();Application.DoEvents();var label=All(settings).OfType<Label>().First(x=>x.Text.StartsWith("当前数据文件"));Check(label.Text.Contains("尚未保存")&&label.Text.Contains("图片 1 张"),"Storage stats scope");
-            var scroll=All(settings).OfType<Panel>().First(x=>x.AutoScroll);scroll.ScrollControlIntoView(label);Application.DoEvents();Shot(settings,"usage-preview.png");settings.Close();
+            settings.StorageDirectory=Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"missing-usage-folder");settings.Show();settings.ShowSection("存储");Application.DoEvents();var label=All(settings).OfType<Label>().First(x=>x.Text.StartsWith("当前数据文件"));Check(label.Text.Contains("尚未保存")&&label.Text.Contains("图片 1 张"),"Storage stats scope");
+            var scroll=All(settings).OfType<Panel>().First(x=>x.AutoScroll&&x.Visible);scroll.ScrollControlIntoView(label);Application.DoEvents();Shot(settings,"usage-preview.png");settings.Close();
         }
         for(int i=0;i<1997;i++)data.Items.Add(new Clip{Text="Load test "+i});var watch=System.Diagnostics.Stopwatch.StartNew();((TextBox)Field(main,"search")).Text="1996";Application.DoEvents();watch.Stop();Check(list.Items.Count==1,"Search at 2000 records");Console.WriteLine("2000-entry search: "+watch.ElapsedMilliseconds+" ms");
         Console.WriteLine("PASS: timed undo, duplicate prevention, bounded thumbnail cache, invalid images, deep search excerpts, UI undo, favorite feedback, storage stats and 2000-entry search.");return 0;
