@@ -21,6 +21,17 @@ namespace WinCopy {
             grid.Controls.Add(new Label { Text = "分组", AutoSize = true }); group.Dock = DockStyle.Fill; group.MaxLength = 80;  group.AccessibleName = "分组，可选择已有分组或输入新名称"; foreach(var name in existingGroups.Where(x => !String.IsNullOrWhiteSpace(x)).Distinct()) group.Items.Add(name); group.Text = clip == null ? "常用" : clip.Group; grid.Controls.Add(group);
             grid.Controls.Add(new Label { Text = "内容", AutoSize = true }); body.Dock = DockStyle.Fill; body.Multiline = true; body.AcceptsReturn = true; body.ScrollBars = ScrollBars.Vertical; body.MaxLength = 1000000; body.Text = clip == null ? "" : clip.Text; grid.Controls.Add(Design.Input(body));
             var buttons = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, WrapContents = false, FlowDirection = FlowDirection.RightToLeft, Margin = Padding.Empty, Padding = new Padding(0, 12, 0, 4) }; var ok = new RoundedButton { Text = "保存", AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, MinimumSize = new Size(96, 36), Padding = new Padding(12, 5, 12, 5), Margin = new Padding(6, 0, 0, 0) }; ok.Click += delegate { if (TitleValue.Length == 0 || GroupValue.Length == 0 || BodyValue.Trim().Length == 0) { MacMessage.Show("请填写名称、分组和内容。"); return; } DialogResult = DialogResult.OK; }; buttons.Controls.Add(ok); var cancel = new RoundedButton { Text = "取消", DialogResult = DialogResult.Cancel, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, MinimumSize = new Size(96, 36), Padding = new Padding(12, 5, 12, 5), Margin = new Padding(6, 0, 0, 0) }; buttons.Controls.Add(cancel); CancelButton = cancel; grid.Controls.Add(buttons); Design.Dialog(this); MinimumSize=new Size(480,490);
+            bool fitting=false;
+            Action fit=delegate {
+                if(fitting||!Visible||body.Height>=100)return;fitting=true;
+                try {
+                    grid.SuspendLayout();
+                    grid.Padding=new Padding(Math.Min(20,grid.Padding.Left),12,Math.Min(20,grid.Padding.Right),12);
+                    foreach(int index in new[]{0,2,4})grid.RowStyles[index].Height=Math.Min(grid.RowStyles[index].Height,Font.Height+8);
+                    foreach(int index in new[]{1,3})grid.RowStyles[index].Height=Math.Min(grid.RowStyles[index].Height,Font.Height+34);
+                } finally {grid.ResumeLayout(true);fitting=false;}
+            };
+            body.SizeChanged+=delegate{fit();};Shown+=delegate{fit();};
         }
     }
     public partial class SettingsDialog : Form {
