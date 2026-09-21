@@ -19,7 +19,7 @@ namespace WinCopy {
         public DateTime Created = DateTime.Now;
         public string Source = "";
         public bool Pinned;
-        public bool Snippet;
+        public bool Snippet; public bool IsTemplate; public string ShortcutKey="";
         public string Title = "";
         public string Group = "常用";
         public string Preview { get { return Snippet ? Title : Kind == "图片" ? "图片 · " + Text : Text; } }

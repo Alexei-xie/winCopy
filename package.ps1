@@ -37,6 +37,10 @@ if ($LASTEXITCODE -ne 0) { throw 'Usability regression tests failed.' }
 if ($LASTEXITCODE -ne 0) { throw 'Management test compilation failed.' }
 & (Join-Path $dist 'ManagementRegression.exe')
 if ($LASTEXITCODE -ne 0) { throw 'Management regression tests failed.' }
+& $compiler /nologo /target:exe /codepage:65001 "/out:$dist\TemplateRegression.exe" "/reference:$dist\winCopy.exe" /reference:System.Core.dll /reference:System.Drawing.dll /reference:System.Windows.Forms.dll (Join-Path $PSScriptRoot 'tests\TemplateRegression.cs')
+if ($LASTEXITCODE -ne 0) { throw 'Template test compilation failed.' }
+& (Join-Path $dist 'TemplateRegression.exe')
+if ($LASTEXITCODE -ne 0) { throw 'Template regression tests failed.' }
 if (-not $IsccPath) {
     $IsccPath = @("${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe", "$env:ProgramFiles\Inno Setup 6\ISCC.exe") | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
 }

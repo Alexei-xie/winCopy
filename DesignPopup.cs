@@ -25,7 +25,7 @@ namespace WinCopy {
             var query=search.Text.Trim();var titleText=c.Preview;
             if(query.Length>0&&titleText.IndexOf(query,StringComparison.OrdinalIgnoreCase)<0&&(c.Text??"").IndexOf(query,StringComparison.OrdinalIgnoreCase)>=0)titleText=c.Text;
             SearchPresentation.Draw(e.Graphics,SearchPresentation.Excerpt(titleText,query),query,Font,new Rectangle(r.X+58,r.Y+10,r.Width-88,24),Ink);
-            using(var small=new Font(Font.FontFamily,8.5f))SearchPresentation.Draw(e.Graphics,SearchPresentation.Excerpt((c.Snippet?c.Group:c.Kind)+"  ·  "+c.Created.ToString("HH:mm")+(String.IsNullOrEmpty(c.Source)?"":"  ·  "+c.Source),query),query,small,new Rectangle(r.X+58,r.Y+37,r.Width-85,20),Muted);
+            using(var small=new Font(Font.FontFamily,8.5f))SearchPresentation.Draw(e.Graphics,SearchPresentation.Excerpt((c.Snippet?c.Group+(c.IsTemplate?" · 模板":"")+(String.IsNullOrEmpty(c.ShortcutKey)?"":" · 快捷键 "+c.ShortcutKey):c.Kind)+"  ·  "+c.Created.ToString("HH:mm")+(String.IsNullOrEmpty(c.Source)?"":"  ·  "+c.Source),query),query,small,new Rectangle(r.X+58,r.Y+37,r.Width-85,20),Muted);
             if(selected)TextRenderer.DrawText(e.Graphics,"↵",Font,new Rectangle(r.Right-28,r.Y+18,20,25),Accent,TextFormatFlags.VerticalCenter);
         }
         void BuildActions(TableLayoutPanel layout) {

@@ -102,16 +102,16 @@ namespace WinCopy {
             if (picture.Visible) { try { using (var ms = new MemoryStream(c.Image)) using (var image = Image.FromStream(ms)) picture.Image = new Bitmap(image); } catch { picture.Visible = false; preview.Visible = true; preview.Text = "图片数据无法预览"; } }
         }
         void SetStatus(string message) { status.Text = message; if(!feedbackTimer.Enabled)activityLabel.Text = paused ? "记录已暂停 · 在更多菜单中继续" : "留住灵感，让复制更轻松"; }
-        void Changed() { db.Prune(); RefreshItems(); save.Stop(); save.Start(); }
+        void Changed() { db.Prune(); SyncSnippetHotkeys(); RefreshItems(); save.Stop(); save.Start(); }
         void SaveNow() { if (storageBlocked) return; try { store.Save(db); } catch (Exception ex) { SetStatus("保存失败：" + ex.Message); } }
         protected override void OnHandleCreated(EventArgs e) {
-            base.OnHandleCreated(e); if (!Native.AddClipboardFormatListener(Handle)) SetStatus("无法注册剪贴板监听");
+            base.OnHandleCreated(e); SyncSnippetHotkeys(); if (!Native.AddClipboardFormatListener(Handle)) SetStatus("无法注册剪贴板监听");
             if (!RegisterShortcut(db.Hotkey)) BeginInvoke((Action)delegate { MessageBox.Show("Ctrl + Alt + " + db.Hotkey + " 已被其他应用占用，请在设置中更改。", "winCopy"); });
         }
-        protected override void OnHandleDestroyed(EventArgs e) { Native.RemoveClipboardFormatListener(Handle); Native.UnregisterHotKey(Handle, 1); base.OnHandleDestroyed(e); }
+        protected override void OnHandleDestroyed(EventArgs e) { Native.RemoveClipboardFormatListener(Handle); Native.UnregisterHotKey(Handle, 1); foreach(var id in snippetHotkeys.Keys)Native.UnregisterHotKey(Handle,id);snippetHotkeys.Clear();shortcutSignature=null; base.OnHandleDestroyed(e); }
         bool RegisterShortcut(string key) { return Native.RegisterHotKey(Handle, 1, 0x4003, (uint)key.ToUpperInvariant()[0]); }
         protected override void WndProc(ref Message m) {
-            if (m.Msg == 0x0312) { OpenPanel(); }
+            if (m.Msg == 0x0312) { if(m.WParam.ToInt32()==1)OpenPanel();else UseSnippetShortcut(m.WParam.ToInt32()); }
             if (m.Msg == 0x031D && !paused) { pendingSequence = Native.GetClipboardSequenceNumber(); if (pendingSequence != ownSequence) { attempts = 0; capture.Stop(); capture.Start(); } }
             base.WndProc(ref m);
         }
@@ -138,9 +138,11 @@ namespace WinCopy {
             catch (Exception ex) { SetStatus("无法读取该内容：" + ex.Message); }
         }
         void OpenPanel() { var h = Native.GetForegroundWindow(); if (h != Handle && Native.ProcessName(h) != System.Diagnostics.Process.GetCurrentProcess().ProcessName) target = h; PositionPopup(); Show(); WindowState = FormWindowState.Normal; Native.SetForegroundWindow(Handle); Activate(); search.Focus(); search.SelectAll(); db.Prune(); RefreshItems(); }
-        void UseSelected(bool plain, bool copyOnly) {
-            var c = Selected; if (c == null) return;
+        void UseSelected(bool plain, bool copyOnly) {UseClip(Selected,plain,copyOnly);}
+        void UseClip(Clip c,bool plain,bool copyOnly) {
+            if(c==null)return;
             try {
+                var intendedTarget=target;c=ExpandSnippet(c);if(c==null)return;target=intendedTarget;
                 var data = new DataObject();
                 if (c.Image != null && !plain) { using (var ms = new MemoryStream(c.Image)) using (var image = Image.FromStream(ms)) using (var bitmap = new Bitmap(image)) { data.SetData(DataFormats.Bitmap, bitmap); Clipboard.SetDataObject(data, true, 5, 50); } }
                 else {

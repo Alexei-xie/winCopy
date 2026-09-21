@@ -29,9 +29,9 @@ namespace WinCopy {
             var restoredOrder=incoming.OrderedSnippets();int added=0;var ids=new HashSet<string>(target.Items.Select(x=>x.Id));
             var history=target.Items.Where(x=>!x.Snippet).GroupBy(x=>x.Fingerprint()).ToDictionary(g=>g.Key,g=>g.First());
             foreach(var c in incoming.Items){
-                if(c.Snippet){if(target.Items.Any(x=>x.Snippet&&x.Title==c.Title&&x.Group==c.Group&&x.Text==c.Text))continue;}
+                if(c.Snippet){if(target.Items.Any(x=>x.Snippet&&x.Title==c.Title&&x.Group==c.Group&&x.Text==c.Text&&x.IsTemplate==c.IsTemplate))continue;}
                 else {Clip existing;if(history.TryGetValue(c.Fingerprint(),out existing)){existing.Pinned|=c.Pinned;continue;}}
-                if(ids.Contains(c.Id))c.Id=Guid.NewGuid().ToString("N");ids.Add(c.Id);target.Items.Add(c);if(!c.Snippet)history[c.Fingerprint()]=c;added++;
+                c.ShortcutKey="";if(ids.Contains(c.Id))c.Id=Guid.NewGuid().ToString("N");ids.Add(c.Id);target.Items.Add(c);if(!c.Snippet)history[c.Fingerprint()]=c;added++;
             }
             target.GroupOrder=target.GroupOrder.Concat(incoming.GetGroups()).Distinct().ToList();
             target.SnippetOrder=target.SnippetOrder.Concat(restoredOrder.Select(x=>x.Id)).Distinct().ToList();

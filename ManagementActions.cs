@@ -29,10 +29,11 @@ namespace WinCopy {
     }
     public partial class MainWindow {
         void CommitManagedData(Database next){
-            if(storageBlocked)throw new IOException("当前数据存储不可用，未保存更改。");store.Save(next);
-            save.Stop();ClearUndo();db.Items=next.Items;db.GroupOrder=next.GroupOrder;db.SnippetOrder=next.SnippetOrder;RefreshItems();
+            if(storageBlocked)throw new IOException("当前数据存储不可用，未保存更改。");SnippetTemplates.ValidateKeys(next);store.Save(next);
+            save.Stop();ClearUndo();db.Items=next.Items;db.GroupOrder=next.GroupOrder;db.SnippetOrder=next.SnippetOrder;shortcutSignature=null;SyncSnippetHotkeys();RefreshItems();
         }
-        void ManageSnippets(Form owner=null){try{using(var manager=new SnippetManager(db))if(manager.ShowDialog(owner??this)==DialogResult.OK){var next=DataManagement.Clone(db);next.Items.RemoveAll(x=>x.Snippet);next.Items.AddRange(manager.Working.Items.Where(x=>x.Snippet));next.GroupOrder=manager.Working.GroupOrder;next.SnippetOrder=manager.Working.SnippetOrder;next.Prune();CommitManagedData(next);NotifyAction("片段管理更改已保存");}}catch(Exception ex){MessageBox.Show(this,"无法保存片段管理更改：\n"+ex.Message,"winCopy");}}
+        DialogResult ShowSnippetManager(SnippetManager manager,Form owner){manager.ShortcutAvailable=CheckSnippetShortcut;return manager.ShowDialog(owner);}
+        void ManageSnippets(Form owner=null){try{using(var manager=new SnippetManager(db))if(ShowSnippetManager(manager,owner??this)==DialogResult.OK){var next=DataManagement.Clone(db);next.Items.RemoveAll(x=>x.Snippet);next.Items.AddRange(manager.Working.Items.Where(x=>x.Snippet));next.GroupOrder=manager.Working.GroupOrder;next.SnippetOrder=manager.Working.SnippetOrder;next.Prune();CommitManagedData(next);NotifyAction("片段管理更改已保存");}}catch(Exception ex){MessageBox.Show(this,"无法保存片段管理更改：\n"+ex.Message,"winCopy");}}
         void BackupData(Form owner){
             using(var file=new SaveFileDialog{Filter="winCopy 加密备份|*.wcbak",DefaultExt="wcbak",FileName="winCopy-"+DateTime.Now.ToString("yyyyMMdd-HHmm")+".wcbak"})if(file.ShowDialog(owner)==DialogResult.OK)using(var password=new BackupPasswordDialog(true))if(password.ShowDialog(owner)==DialogResult.OK){
                 try{if(!String.Equals(Path.GetExtension(file.FileName),".wcbak",StringComparison.OrdinalIgnoreCase))throw new IOException("请使用 .wcbak 备份扩展名。");owner.UseWaitCursor=true;BackupArchive.Save(file.FileName,db,password.Password);MessageBox.Show(owner,"加密备份已保存。可在另一台电脑中使用该密码恢复。","winCopy");}catch(Exception ex){MessageBox.Show(owner,"备份失败：\n"+ex.Message,"winCopy");}finally{owner.UseWaitCursor=false;}
@@ -40,7 +41,7 @@ namespace WinCopy {
         }
         void RestoreData(Form owner){using(var file=new OpenFileDialog{Filter="winCopy 加密备份|*.wcbak"})if(file.ShowDialog(owner)==DialogResult.OK)using(var password=new BackupPasswordDialog(false))if(password.ShowDialog(owner)==DialogResult.OK){
             try{owner.UseWaitCursor=true;var incoming=BackupArchive.Load(file.FileName,password.Password);owner.UseWaitCursor=false;
-                if(MessageBox.Show(owner,"备份包含 "+incoming.Items.Count+" 条记录。\n将合并并去重，保留当前设置和存储目录；普通历史遵守当前保留天数及数量限制。\n继续恢复？","恢复备份",MessageBoxButtons.YesNo,MessageBoxIcon.Question,MessageBoxDefaultButton.Button2)!=DialogResult.Yes)return;
+                if(MessageBox.Show(owner,"备份包含 "+incoming.Items.Count+" 条记录。\n将合并并去重，保留当前设置和存储目录；普通历史遵守当前保留天数及数量限制。\n新导入片段的独立快捷键需在本机重新配置。\n继续恢复？","恢复备份",MessageBoxButtons.YesNo,MessageBoxIcon.Question,MessageBoxDefaultButton.Button2)!=DialogResult.Yes)return;
                 var next=DataManagement.Clone(db);DataManagement.Merge(next,incoming);CommitManagedData(next);MessageBox.Show(owner,"已合并备份，当前共 "+db.Items.Count+" 条记录。","winCopy");
             }catch(Exception ex){MessageBox.Show(owner,"恢复未完成，当前记录未被替换：\n"+ex.Message,"winCopy");}finally{owner.UseWaitCursor=false;}
         }}
